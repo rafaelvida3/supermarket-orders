@@ -5,29 +5,42 @@ services:
       - "8000:8000"
     volumes:
       - .:/var/www
-    # Create .env from example, generate key, migrate, import products, and start Laravel
-    command: sh -c "
-      if [ ! -f .env ]; then
-        echo 'No .env found - copying from .env.example...';
-        cp .env.example .env;
-        echo 'Generating APP_KEY...';
-        php artisan key:generate;
-      fi &&
-      php artisan migrate --force &&
-      php artisan products:import &&
-      php artisan serve --host=0.0.0.0 --port=8000
+    command: >
+      sh -c "
+        set -e;
+        if [ ! -f .env ]; then
+          echo 'No .env found - copying from .env.example...';
+          cp .env.example .env;
+          echo 'Generating APP_KEY...';
+          php artisan key:generate --force;
+        fi;
+        echo 'Running composer install...';
+        composer install;
+        echo 'Running migrations...';
+        php artisan migrate --force;
+        echo 'Importing products...';
+        php artisan products:import;
+        echo 'Starting Laravel server...';
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
 
   frontend:
     image: node:20
     working_dir: /app
     ports:
       - "5173:5173"
-    # 1) Mount project source code into the container.
     volumes:
       - .:/app
-      # 2) Override node_modules with an anonymous volume
-      #    to prevent dependency conflicts between host and container
       - /app/node_modules
-    # 3) Install dependencies (npm ci or npm install)
-    #    and start Vite dev server exposed to the host
-    command: sh -c "npm ci || npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    command: >
+      sh -c "
+        set -e;
+        echo 'Installing dependencies...';
+        if [ -f package-lock.json ]; then
+          npm ci || npm install;
+        else
+          npm install;
+        fi;
+        echo 'Starting Vite dev server...';
+        npm run dev -- --host 0.0.0.0 --port 5173
+      "
