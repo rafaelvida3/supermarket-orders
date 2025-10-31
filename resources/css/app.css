@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Transition configuration for fade effect */
+.fade-enter-active,
+.fade-leave-active {
+    /* Smooth transition for opacity when element enters or leaves */
+    transition: opacity 0.5s ease;
+}
+
+/* Initial and final states of the fade animation */
+.fade-enter-from,
+.fade-leave-to {
+    /* Element starts or ends fully transparent */
+    opacity: 0;
+}
