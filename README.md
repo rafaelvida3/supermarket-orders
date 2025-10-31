@@ -111,13 +111,14 @@ Antes de iniciar os containers, crie o banco `supermarket_orders` no seu MySQL l
 
 Em seguida, defina o **usuário e senha do banco** no arquivo `.env.example` do Laravel, por exemplo:
 
-
     DB_CONNECTION=mysql
     DB_HOST=host.docker.internal
     DB_PORT=3306
     DB_DATABASE=supermarket_orders
     DB_USERNAME=root
     DB_PASSWORD=password
+  
+> **Antes de enviar ou versionar o projeto**, restaure o `.env.example` ao seu conteúdo original (sem senhas nem chaves) para evitar expor informações sensíveis no repositório público. O arquivo `.env.example` é temporariamente ajustado para conter variáveis de ambiente completas para facilitar a execução automática dentro do Docker.
 
 Na raiz do projeto, execute o comando abaixo:
 
