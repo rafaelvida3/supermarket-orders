@@ -5,7 +5,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/var/www
-    command: >
+    command: 
       sh -c "
         set -e;
         if [ ! -f .env ]; then
@@ -25,7 +25,7 @@ services:
       "
 
   frontend:
-    image: node:20
+    image: node:24
     working_dir: /app
     ports:
       - "5173:5173"
@@ -33,6 +33,7 @@ services:
       - .:/app
       - /app/node_modules
     command: >
+<<<<<<< HEAD
       sh -c "
         set -e;
         echo 'Installing dependencies...';
@@ -44,3 +45,6 @@ services:
         echo 'Starting Vite dev server...';
         npm run dev -- --host 0.0.0.0 --port 5173
       "
+=======
+      sh -c "npm ci || npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+>>>>>>> 0143a450d459eb93bafe4a09bf2b5390ee70b82d

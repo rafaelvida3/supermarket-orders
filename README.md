@@ -1,4 +1,4 @@
-# Supermarket Orders — Laravel + Vue 3
+# Supermarket Orders - Laravel + Vue 3
 
 Formulário de cadastro de pedidos de supermercado com **Laravel (API REST)** no back-end e **Vue 3 + PrimeVue + Tailwind** no front-end.  
 
@@ -109,7 +109,7 @@ O projeto pode ser executado de forma totalmente containerizada via **Docker Com
 ### Banco de dados
 Antes de iniciar os containers, crie o banco `supermarket_orders` no seu MySQL local (via phpMyAdmin ou CLI).  
 
-Em seguida, defina o **usuário e senha do banco** no arquivo `.env` do Laravel, por exemplo:
+Em seguida, defina o **usuário e senha do banco** no arquivo `.env.example` do Laravel, por exemplo:
 
 
     DB_CONNECTION=mysql
