@@ -32,8 +32,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: >
-<<<<<<< HEAD
+    command:
       sh -c "
         set -e;
         echo 'Installing dependencies...';
@@ -45,6 +44,3 @@ services:
         echo 'Starting Vite dev server...';
         npm run dev -- --host 0.0.0.0 --port 5173
       "
-=======
-      sh -c "npm ci || npm install && npm run dev -- --host 0.0.0.0 --port 5173"
->>>>>>> 0143a450d459eb93bafe4a09bf2b5390ee70b82d
