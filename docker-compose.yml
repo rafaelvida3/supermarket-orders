@@ -34,19 +34,11 @@ services:
       - app
     volumes:
       - .:/app
-      - node_modules_cache:/app/node_modules
-    command:
+    command: >
       sh -c "
         set -e;
-        echo 'Installing dependencies...';
-        if [ -f package-lock.json ]; then
-          npm ci || npm install;
-        else
-          npm install;
-        fi;
+        echo 'Installing dependencies on host filesystem...';
+        npm install;
         echo 'Starting Vite dev server...';
         npm run dev -- --host 0.0.0.0 --port 5173
       "
-
-volumes:
-  node_modules_cache:
