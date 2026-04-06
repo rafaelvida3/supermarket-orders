@@ -72,8 +72,8 @@
     <!-- ================= ORDER ITEMS ================= -->
     <h2 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">Itens do Pedido</h2>
 
-    <!-- Responsive table for order items -->
-    <div class="overflow-x-auto rounded-md border dark:border-gray-700">
+    <!-- Desktop table -->
+    <div class="hidden md:block overflow-x-auto rounded-md border dark:border-gray-700">
       <table class="w-full min-w-[600px] border-collapse text-sm sm:text-base dark:text-gray-100">
         <thead class="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-b dark:border-gray-700">
           <tr>
@@ -93,10 +93,16 @@
           >
             <!-- Product selector (AutoComplete) -->
             <td class="p-2 align-top min-w-[200px]">
-              <IconField class="w-full">
+              <template v-if="isViewMode">
+                <div class="border rounded p-2 bg-gray-50 dark:bg-gray-800/60">
+                  {{ getProductName(item) }}
+                </div>
+              </template>
+
+              <IconField v-else class="w-full">
                 <AutoComplete
                   v-model="item.product"
-                  :key="`ac-${index}-${acKeys[index]}`"
+                  :key="`desktop-ac-${index}-${acKeys[index]}`"
                   ref="autocompleteRefs"
                   :suggestions="productSuggestions[index]"
                   optionLabel="name"
@@ -110,7 +116,7 @@
                   :disabled="isViewMode"
                   fluid
                 >
-                    <!-- Chip template for selected product -->
+                  <!-- Chip template for selected product -->
                   <template #chip="slotProps">
                     <span>{{ slotProps.value?.name || '' }}</span>
                   </template>
@@ -130,7 +136,13 @@
             >
               <Transition name="fade">
                 <div v-if="item.product_id" class="flex flex-col items-center">
+                  <template v-if="isViewMode">
+                    <div class="border rounded p-2 min-w-16 text-center bg-gray-50 dark:bg-gray-800/60">
+                      {{ item.qty }}
+                    </div>
+                  </template>
                   <InputNumber
+                    v-else
                     v-model="item.qty"
                     showButtons
                     buttonLayout="horizontal"
@@ -188,6 +200,124 @@
       </table>
     </div>
 
+    <!-- Mobile cards -->
+    <div class="md:hidden space-y-3">
+      <div
+        v-for="(item, index) in items"
+        :key="`mobile-${index}`"
+        class="rounded-md border p-3 space-y-3 dark:border-gray-700"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Item {{ index + 1 }}
+            </div>
+          </div>
+
+          <button
+            v-if="!isViewMode && item.product_id !== null"
+            type="button"
+            class="text-red-500 dark:text-red-400 cursor-pointer"
+            @click="removeItem(index)"
+            aria-label="Remover item"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <div>
+          <label class="block font-medium mb-1 text-gray-700 dark:text-gray-200">Produto</label>
+
+          <template v-if="isViewMode">
+            <div class="border rounded p-2 bg-gray-50 dark:bg-gray-800/60 dark:border-gray-700">
+              {{ getProductName(item) }}
+            </div>
+          </template>
+
+          <IconField v-else class="w-full">
+            <AutoComplete
+              v-model="item.product"
+              :key="`mobile-ac-${index}-${acKeys[index]}`"
+              :suggestions="productSuggestions[index]"
+              optionLabel="name"
+              forceSelection
+              placeholder="Digite para buscar..."
+              @complete="(e) => completeProduct(index, e)"
+              @item-select="(e) => onProductSelect(index, e)"
+              inputClass="border rounded p-2 w-full"
+              :delay="250"
+              :minLength="2"
+              :disabled="isViewMode"
+              fluid
+            >
+              <template #chip="slotProps">
+                <span>{{ slotProps.value?.name || '' }}</span>
+              </template>
+            </AutoComplete>
+
+            <Transition name="fade">
+              <InputIcon v-if="loadingProducts" class="pi pi-spin pi-spinner" />
+            </Transition>
+          </IconField>
+        </div>
+
+        <div v-if="item.product_id" class="grid grid-cols-1 gap-3">
+          <div
+            @mousedown.capture="(e) => checkStock(e, item)"
+            @keydown.capture="(e) => checkStock(e, item)"
+          >
+            <label class="block font-medium mb-1 text-gray-700 dark:text-gray-200">Quantidade</label>
+
+            <template v-if="isViewMode">
+              <div class="border rounded p-2 text-center bg-gray-50 dark:bg-gray-800/60 dark:border-gray-700">
+                {{ item.qty }}
+              </div>
+            </template>
+            <InputNumber
+              v-else
+              v-model="item.qty"
+              showButtons
+              buttonLayout="horizontal"
+              incrementButtonIcon="pi pi-plus"
+              decrementButtonIcon="pi pi-minus"
+              inputClass="text-center w-full"
+              class="w-full"
+              :min="1"
+              :max="item.product?.qty_stock"
+              :disabled="isViewMode"
+              fluid
+            />
+
+            <Message
+              v-if="submitted && Number(item.qty) <= 0"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              Informe a quantidade
+            </Message>
+
+            <Message
+              v-if="item.product_id && !isViewMode"
+              severity="secondary"
+              size="small"
+              variant="simple"
+              class="mt-2"
+            >
+              Estoque total: {{ item.product?.qty_stock }}
+            </Message>
+          </div>
+
+          <div>
+            <label class="block font-medium mb-1 text-gray-700 dark:text-gray-200">Subtotal</label>
+            <div class="border rounded p-2 text-right bg-gray-50 dark:bg-gray-800/60 dark:border-gray-700">
+              {{ item?.price ? formatPrice(getSubtotal(item)) : '-' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= VALIDATION MESSAGE ================= -->
     <Message v-if="noProductSelected" severity="error" size="small" variant="simple" class="mt-3">
       É necessário selecionar pelo menos um produto
@@ -229,18 +359,18 @@ import { createOrder, getOrderById } from '@/services/ordersService'; // API cal
 import { fetchProducts } from '@/services/productsService'; // API call for product suggestions
 
 /* PrimeVue components */
-import AutoComplete from 'primevue/autocomplete'
-import DatePicker from 'primevue/datepicker'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
-import { useToast } from 'primevue/usetoast'
+import AutoComplete from 'primevue/autocomplete';
+import DatePicker from 'primevue/datepicker';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import InputNumber from 'primevue/inputnumber';
+import InputText from 'primevue/inputtext';
+import Message from 'primevue/message';
+import { useToast } from 'primevue/usetoast';
 
 /* Vue core utilities */
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 /* ===== Setup ===== */
 const router = useRouter()
@@ -314,9 +444,9 @@ const removeItem = (i) => {
  * @returns {Promise<void>}
  */
 const completeProduct = async (index, { query }) => {
-  loadingProducts.value = true;
-  const list = await fetchProducts(query)  // sua função já existente
-  loadingProducts.value = false;
+  loadingProducts.value = true
+  const list = await fetchProducts(query)
+  loadingProducts.value = false
   productSuggestions.value[index] = list
 }
 
@@ -346,7 +476,7 @@ const onProductSelect = (index, event) => {
 
     /* Clears suggestions and forces input reset */
     productSuggestions.value[index] = []
-    acKeys.value[index]++ 
+    acKeys.value[index]++
     return
   }
 
@@ -365,6 +495,13 @@ watch(items, (newItems) => {
     total.value = newItems.reduce((sum, item) => sum + getSubtotal(item), 0)
   }
 }, { deep: true })
+
+/**
+ * Returns the product name for display in view mode.
+ * @param {{ product?: { name?: string }|null }} item - Current item.
+ * @returns {string} Product name.
+ */
+const getProductName = (item) => item?.product?.name || ''
 
 /**
  * Computes the item subtotal.
@@ -398,8 +535,8 @@ const checkStock = (e, item) => {
 
   const plusButton = wrapper.querySelector('.p-inputnumber-increment-button')
 
-  const qty = item?.qty;
-  const qty_stock = item.product?.qty_stock;
+  const qty = item?.qty
+  const qty_stock = item.product?.qty_stock
 
   /* If increment button is disabled, user hit stock limit */
   if (plusButton && plusButton.classList.contains('p-disabled') && qty >= qty_stock) {
@@ -423,7 +560,7 @@ const noProductSelected = computed(() =>
  */
 const saveOrder = async () => {
   submitted.value = true
-  if (!customerName.value || !deliveryDate.value || noProductSelected.value) return;
+  if (!customerName.value || !deliveryDate.value || noProductSelected.value) return
   
   const payload = {
     customer_name: customerName.value,
@@ -469,7 +606,7 @@ onMounted(async () => {
     orderId.value = route.params.id
 
     try {
-      showOverlay();
+      showOverlay()
       const data = await getOrderById(orderId.value)
 
       /* Populate fields with loaded data */
@@ -481,7 +618,7 @@ onMounted(async () => {
         price: item?.unit_price,
         subtotal: item?.subtotal,
         product: item?.product
-      }));
+      }))
       total.value = data.total
     } catch (err) {
       toast.add({

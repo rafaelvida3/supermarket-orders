@@ -37,13 +37,17 @@ export default defineConfig({
         host: '0.0.0.0',            // listen on all interfaces inside the container
         port: 5173,
         strictPort: true,
+        watch: {
+            usePolling: true,
+            interval: 1000
+        },
         hmr: {
             host: 'localhost',        // HMR URL seen by the browser
             port: 5173,
             protocol: 'ws'
         },
         proxy: {
-            '/api': 'http://localhost:8000' // forward API calls to Laravel in Docker
+            '/api': 'http://app:8000' // forward API calls to Laravel in Docker
         }
     }
 });
