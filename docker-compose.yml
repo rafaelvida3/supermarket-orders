@@ -1,33 +1,46 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: dev
+    working_dir: /var/www
     ports:
       - "8000:8000"
     volumes:
       - .:/var/www
-    command: 
-      sh -c "
-        set -e;
-        git config --global --add safe.directory /var/www;
+      - vendor_cache:/var/www/vendor
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+    command: >
+      sh -c '
+        set -e
+        git config --global --add safe.directory /var/www
         if [ ! -f .env ]; then
-          echo 'No .env found - copying from .env.example...';
-          cp .env.example .env;
-        fi;
-        if [ ! -d vendor ]; then
-          echo 'Running composer install...';
-          composer install;
-        fi;
-        if ! grep -q 'APP_KEY=' .env || [ -z \"$(grep 'APP_KEY=' .env | cut -d '=' -f2)\" ]; then
-          echo 'Generating APP_KEY...';
-          php artisan key:generate --force;
-        fi;
-        echo 'Running migrations...';
-        php artisan migrate --force;
-        echo 'Importing products...';
-        php artisan products:import;
-        echo 'Starting Laravel server...';
+          echo "No .env found - copying from .env.example..."
+          cp .env.example .env
+        fi
+        if [ ! -f database/database.sqlite ]; then
+          mkdir -p database
+          touch database/database.sqlite
+        fi
+        if [ ! -d vendor ] || [ -z "$(ls -A vendor 2>/dev/null)" ]; then
+          echo "Running composer install..."
+          composer install --no-interaction --prefer-dist
+        fi
+        if ! grep -q "^APP_KEY=" .env || [ -z "$(grep "^APP_KEY=" .env | cut -d "=" -f2)" ]; then
+          echo "Generating APP_KEY..."
+          php artisan key:generate --force
+        fi
+        echo "Running migrations..."
+        php artisan migrate --force
+        if ! php artisan tinker --execute="exit(App\\Models\\Product::exists() ? 0 : 1);" >/dev/null 2>&1; then
+          echo "Importing products..."
+          php artisan products:import
+        fi
+        echo "Starting Laravel server..."
         php artisan serve --host=0.0.0.0 --port=8000
-      "
+      '
 
   frontend:
     image: node:20
@@ -39,15 +52,20 @@ services:
       - app
     volumes:
       - .:/app
+      - node_modules_cache:/app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
     command: >
-      sh -c "
-        set -e;
-        echo 'Installing dependencies...';
-        ls node_modules >/dev/null 2>&1 || npm install;
-        echo 'Starting Vite dev server...';
+      sh -c '
+        set -e
+        if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then
+          echo "Installing dependencies..."
+          npm install
+        fi
+        echo "Starting Vite dev server..."
         npm run dev -- --host 0.0.0.0 --port 5173
-      "
+      '
 
 volumes:
+  vendor_cache:
   node_modules_cache:
->>>>>>> 248e989 (feat: enhance order UX and modernize dev setup)

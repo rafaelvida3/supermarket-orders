@@ -1,22 +1,42 @@
-# Use official PHP image with common extensions
-FROM php:8.4-cli
+FROM php:8.4-cli AS php_base
 
-# Install required system packages and PHP extensions for Laravel and Excel export
-RUN apt-get update && apt-get install -y \
-    zip unzip git curl libpng-dev libonig-dev libxml2-dev libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Set working directory and copy project files
 WORKDIR /var/www
+
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    unzip \
+    libpng-dev \
+    libxml2-dev \
+    libzip-dev \
+    libsqlite3-dev \
+    libonig-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd zip \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM php_base AS dev
+COPY composer.json composer.lock* ./
+RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts
+CMD ["php", "-v"]
+
+FROM node:20 AS frontend_builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
 COPY . .
+RUN npm run build
 
-# Install Composer and PHP dependencies
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer install --no-interaction --no-scripts --no-progress
+FROM php_base AS production
+COPY . .
+COPY --from=frontend_builder /app/public/build /var/www/public/build
 
-# Expose application port
-EXPOSE 8000
+RUN mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
+    && touch database/database.sqlite \
+    && composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader --no-progress \
+    && chmod -R 775 storage bootstrap/cache database
 
-# Start Laravel development server
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+EXPOSE 10000
+
+CMD ["sh", "-c", "php artisan migrate --force && php artisan products:import && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
