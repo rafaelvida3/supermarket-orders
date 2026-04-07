@@ -31,7 +31,7 @@ export const fetchOrders = async () => {
  */
 export const createOrder = async (payload) => {
   try {
-    const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/pedidos`, payload)
+    const { data } = await axios.post(`/api/pedidos`, payload)
     return data
   } catch (error) {
     console.error('Error creating order:', error)
@@ -50,7 +50,7 @@ export const createOrder = async (payload) => {
  */
 export const getOrderById = async (id) => {
   try {
-    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/pedidos/${id}`)
+    const { data } = await axios.get(`/api/pedidos/${id}`)
     return data
   } catch (error) {
     console.error(`Error fetching order with ID ${id}:`, error)
