@@ -28,14 +28,7 @@ class ProductController extends Controller
         $search = $request->query('q');
 
         if ($search && strlen($search) >= 2) {
-            try {
-                $query->whereRaw(
-                    'unaccent(name) ILIKE unaccent(?)',
-                    ["%{$search}%"]
-                );
-            } catch (\Throwable $e) {
-                $query->where('name', 'ILIKE', "%{$search}%");
-            }
+            $query->where('name', 'ILIKE', "%{$search}%");
         }
 
         $products = $query
