@@ -23,7 +23,7 @@ COPY composer.json composer.lock* ./
 RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts
 CMD ["php", "-v"]
 
-FROM node:20 AS frontend_builder
+FROM node:24 AS frontend_builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
