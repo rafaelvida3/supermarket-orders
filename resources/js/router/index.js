@@ -1,44 +1,45 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import NotFound from "@/pages/NotFound.vue";
-import OrderPage from "@/pages/OrderPage.vue";
-import OrdersList from "@/pages/OrdersList.vue";
-import StockPage from "@/pages/StockPage.vue";
+const OrdersListPage = () => import("@/pages/OrdersList.vue");
+const OrderPage = () => import("@/pages/OrderPage.vue");
+const StockPage = () => import("@/pages/StockPage.vue");
+const NotFoundPage = () => import("@/pages/NotFound.vue");
 
 const routes = [
   {
     path: "/orders",
-    component: OrdersList,
+    component: OrdersListPage,
     name: "orders.list",
-    meta: { title: "Pedidos" }
+    meta: { title: "Pedidos" },
   },
   {
     path: "/orders/new",
     component: OrderPage,
     name: "orders.new",
-    meta: { title: "Novo Pedido" }
+    meta: { title: "Novo Pedido" },
   },
   {
     path: "/orders/:id",
     component: OrderPage,
     name: "orders.view",
-    meta: { title: "Visualizar Pedido" }
+    meta: { title: "Visualizar Pedido" },
   },
   {
     path: "/stock",
     component: StockPage,
     name: "stock.index",
-    meta: { title: "Estoque" }
+    meta: { title: "Estoque" },
   },
   {
     path: "/",
-    redirect: "/orders"
+    redirect: "/orders",
   },
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
-    component: NotFound
-  }
+    component: NotFoundPage,
+    meta: { title: "Página não encontrada" },
+  },
 ];
 
 const router = createRouter({

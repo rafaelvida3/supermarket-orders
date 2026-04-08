@@ -37,7 +37,9 @@ class ProductController extends Controller
             ->limit(10)
             ->get();
 
-        return response()->json($products);
+        return response()->json([
+            "data" => $products,
+        ]);
     }
 
     /**
@@ -55,6 +57,8 @@ class ProductController extends Controller
             ->orderBy("name")
             ->get();
 
-        return response()->json($products);
+        return response()->json([
+            "data" => $products,
+        ]);
     }
 }

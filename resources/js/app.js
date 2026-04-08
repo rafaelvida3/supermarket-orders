@@ -1,13 +1,13 @@
 /* ===== Imports ===== */
-import Lara from '@primeuix/themes/lara';
-import 'primeicons/primeicons.css';
-import PrimeVue from 'primevue/config';
-import Toast from 'primevue/toast';
-import ToastService from 'primevue/toastservice';
-import { createApp } from 'vue';
+import Lara from "@primeuix/themes/lara";
+import "primeicons/primeicons.css";
+import PrimeVue from "primevue/config";
+import Toast from "primevue/toast";
+import ToastService from "primevue/toastservice";
+import { createApp } from "vue";
 
-import App from './App.vue';
-import router from './router';
+import App from "./App.vue";
+import router from "./router";
 
 /* ===== Create Vue app instance ===== */
 const app = createApp(App);
@@ -16,23 +16,23 @@ const app = createApp(App);
 app.use(router);
 app.use(PrimeVue, {
   theme: {
-    preset: Lara
+    preset: Lara,
   },
   locale: {
-    emptySearchMessage: 'Nenhum produto encontrado',
-    emptyMessage: ''
-  }
+    emptySearchMessage: "Nenhum produto encontrado",
+    emptyMessage: "",
+  },
 });
 app.use(ToastService);
-app.component('Toast', Toast);
+app.component("Toast", Toast);
 
 /* ===== Customize default Toast behavior ===== */
 const toast = app.config.globalProperties.$toast;
-const original_add = toast.add;
+const originalAdd = toast.add;
 
 toast.add = (message) => {
-  original_add({ life: 2500, ...message });
+  originalAdd({ life: 2500, ...message });
 };
 
 /* ===== Mount app to DOM ===== */
-app.mount('#app');
+app.mount("#app");

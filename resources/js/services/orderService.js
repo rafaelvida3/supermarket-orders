@@ -1,7 +1,10 @@
-
 /* ===== Orders Service ===== */
 
-import apiClient from './apiClient';
+import apiClient from "./apiClient";
+
+const getResponseData = (response) => {
+  return response.data?.data ?? response.data;
+};
 
 /**
  * Fetches all orders from the API.
@@ -12,8 +15,8 @@ import apiClient from './apiClient';
  * @throws {Error} Throws an error if the API request fails.
  */
 export const fetchOrders = async () => {
-    const response = await apiClient.get('/orders');
-    return response.data;
+  const response = await apiClient.get("/orders");
+  return getResponseData(response);
 };
 
 /**
@@ -25,9 +28,9 @@ export const fetchOrders = async () => {
  * @returns {Promise<Object>} A promise that resolves with the created order data.
  * @throws {Error} Throws an error if the API request fails.
  */
-export const createOrder = async payload => {
-    const response = await apiClient.post('/orders', payload);
-    return response.data;
+export const createOrder = async (payload) => {
+  const response = await apiClient.post("/orders", payload);
+  return getResponseData(response);
 };
 
 /**
@@ -35,11 +38,11 @@ export const createOrder = async payload => {
  *
  * @async
  * @function getOrderById
- * @param {number|string} id - The order ID.
+ * @param {number|string} orderId - The order ID.
  * @returns {Promise<Object>} A promise that resolves with the order data.
  * @throws {Error} Throws an error if the API request fails.
  */
-export const getOrderById = async orderId => {
-    const response = await apiClient.get(`/orders/${orderId}`);
-    return response.data;
+export const getOrderById = async (orderId) => {
+  const response = await apiClient.get(`/orders/${orderId}`);
+  return getResponseData(response);
 };

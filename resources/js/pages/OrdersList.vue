@@ -47,7 +47,7 @@
               Data do Pedido
             </p>
             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ formatDate(order.created_at, 'DD/MM/YYYY HH:mm') }}
+              {{ formatDate(order.created_at, "DD/MM/YYYY HH:mm") }}
             </p>
           </div>
 
@@ -138,7 +138,7 @@
             >
           </template>
           <template #body="slotProps">
-            {{ formatDate(slotProps.data.created_at, 'DD/MM/YYYY HH:mm') }}
+            {{ formatDate(slotProps.data.created_at, "DD/MM/YYYY HH:mm") }}
           </template>
         </Column>
 
@@ -210,94 +210,85 @@
 
 <script setup>
 /* ===== Imports ===== */
-import { useLoadingOverlay } from '@/composables/useLoadingOverlay';
-import { formatDate, formatPrice } from '@/helpers'; // Utility functions for formatting
-import { fetchOrders } from '@/services/orderService'; // API call to fetch order list
-import Column from 'primevue/column';
-import DataTable from 'primevue/datatable';
-import { useToast } from 'primevue/usetoast';
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useLoadingOverlay } from "@/composables/useLoadingOverlay";
+import { formatDate, formatPrice } from "@/helpers";
+import { fetchOrders } from "@/services/orderService";
+import Column from "primevue/column";
+import DataTable from "primevue/datatable";
+import { useToast } from "primevue/usetoast";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 
 const { showOverlay, hideOverlay } = useLoadingOverlay();
 
 /* ===== Setup ===== */
-const router = useRouter()
-const toast = useToast()
+const router = useRouter();
+const toast = useToast();
 
 /* ===== Constants ===== */
-const rowsPerPage = 10
+const rowsPerPage = 10;
 
 /* Reactive state */
-const orders = ref([]) // Stores fetched orders
-const loading = ref(true) // Loading state for DataTable
-const currentPage = ref(1)
+const orders = ref([]);
+const loading = ref(true);
+const currentPage = ref(1);
 
 /* ===== Computed values ===== */
 const totalPages = computed(() => {
-  return Math.max(1, Math.ceil(orders.value.length / rowsPerPage))
-})
+  return Math.max(1, Math.ceil(orders.value.length / rowsPerPage));
+});
 
 const paginatedOrders = computed(() => {
-  const startIndex = (currentPage.value - 1) * rowsPerPage
-  const endIndex = startIndex + rowsPerPage
+  const startIndex = (currentPage.value - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
 
-  return orders.value.slice(startIndex, endIndex)
-})
+  return orders.value.slice(startIndex, endIndex);
+});
 
 /* ===== Helpers ===== */
-const sortOrdersByCreatedAtDesc = (ordersList) => {
-  return [...ordersList].sort((firstOrder, secondOrder) => {
-    return new Date(secondOrder.created_at).getTime() - new Date(firstOrder.created_at).getTime()
-  })
-}
-
 const goToOrderDetails = (orderId) => {
   router.push({
-    name: 'orders.view',
+    name: "orders.view",
     params: { id: orderId },
-  })
-}
+  });
+};
 
 const goToPreviousPage = () => {
   if (currentPage.value > 1) {
-    currentPage.value -= 1
+    currentPage.value -= 1;
   }
-}
+};
 
 const goToNextPage = () => {
   if (currentPage.value < totalPages.value) {
-    currentPage.value += 1
+    currentPage.value += 1;
   }
-}
+};
 
 /* ===== Watchers ===== */
 watch(totalPages, (newTotalPages) => {
   if (currentPage.value > newTotalPages) {
-    currentPage.value = newTotalPages
+    currentPage.value = newTotalPages;
   }
-})
+});
 
 /* ===== Lifecycle: on mount ===== */
 onMounted(async () => {
   try {
-    showOverlay() // Displays global loading overlay
-    loading.value = true // Activates table loading indicator
+    showOverlay();
+    loading.value = true;
+    orders.value = await fetchOrders();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Erro inesperado ao carregar pedidos.";
 
-    const fetchedOrders = await fetchOrders()
-    orders.value = sortOrdersByCreatedAtDesc(fetchedOrders)
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'Erro inesperado ao carregar pedidos.'
-
-    // Handles API or network errors
     toast.add({
-      severity: 'error',
-      summary: 'Erro ao carregar pedidos',
+      severity: "error",
+      summary: "Erro ao carregar pedidos",
       detail: errorMessage,
-    })
+    });
   } finally {
-    loading.value = false // Disables table loading indicator
-    hideOverlay() // Hides global loading overlay
+    loading.value = false;
+    hideOverlay();
   }
-})
+});
 </script>

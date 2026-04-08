@@ -21,7 +21,17 @@ class Order extends Model
     protected $fillable = [
         'customer_name',
         'delivery_date',
-        'total'
+        'total',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'delivery_date' => 'date',
+        'total' => 'decimal:2',
     ];
 
     /**

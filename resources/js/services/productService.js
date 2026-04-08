@@ -2,6 +2,10 @@
 
 import apiClient from "./apiClient";
 
+const getResponseData = (response) => {
+  return response.data?.data ?? response.data;
+};
+
 /**
  * Fetches products from the API based on a search query.
  *
@@ -12,13 +16,13 @@ import apiClient from "./apiClient";
  * @throws {Error} Throws an error if the API request fails.
  */
 export const fetchProducts = async (query) => {
-    const response = await apiClient.get("/products", {
-        params: {
-            q: query,
-        },
-    });
+  const response = await apiClient.get("/products", {
+    params: {
+      q: query,
+    },
+  });
 
-    return response.data;
+  return getResponseData(response);
 };
 
 /**
@@ -30,6 +34,6 @@ export const fetchProducts = async (query) => {
  * @throws {Error} Throws an error if the API request fails.
  */
 export const fetchStockProducts = async () => {
-    const response = await apiClient.get("/products/stock");
-    return response.data;
+  const response = await apiClient.get("/products/stock");
+  return getResponseData(response);
 };

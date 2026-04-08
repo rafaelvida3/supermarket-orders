@@ -21,6 +21,16 @@ class Product extends Model
         'id',
         'name',
         'price',
-        'qty_stock'
+        'qty_stock',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'price' => 'decimal:2',
+        'qty_stock' => 'integer',
     ];
 }

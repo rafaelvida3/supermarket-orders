@@ -23,7 +23,18 @@ class OrderItem extends Model
         'product_id',
         'qty',
         'unit_price',
-        'subtotal'
+        'subtotal',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'qty' => 'integer',
+        'unit_price' => 'decimal:2',
+        'subtotal' => 'decimal:2',
     ];
     
     /**

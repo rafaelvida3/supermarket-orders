@@ -22,7 +22,9 @@ class ProductControllerTest extends TestCase {
 
         $response->assertOk()
             ->assertJsonStructure([
-                "*" => ["id", "name", "price", "qty_stock"],
+                "data" => [
+                    "*" => ["id", "name", "price", "qty_stock"],
+                ],
             ]);
     }
 
@@ -43,7 +45,7 @@ class ProductControllerTest extends TestCase {
         $response = $this->getJson("/api/products?q=ri");
 
         $response->assertOk()
-            ->assertJsonCount(1)
+            ->assertJsonCount(1, "data")
             ->assertJsonFragment([
                 "name" => "Rice",
             ])
@@ -65,7 +67,7 @@ class ProductControllerTest extends TestCase {
         $response = $this->getJson("/api/products");
 
         $response->assertOk()
-            ->assertJsonCount(10);
+            ->assertJsonCount(10, "data");
     }
 
     #[Test]
@@ -85,7 +87,7 @@ class ProductControllerTest extends TestCase {
         $response = $this->getJson("/api/products/stock");
 
         $response->assertOk()
-            ->assertJsonCount(2)
+            ->assertJsonCount(2, "data")
             ->assertJsonFragment([
                 "name" => "Rice",
                 "qty_stock" => 2,
