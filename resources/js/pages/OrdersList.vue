@@ -200,13 +200,16 @@
 
 <script setup>
 /* ===== Imports ===== */
+import { useLoadingOverlay } from '@/composables/useLoadingOverlay';
 import { formatDate, formatPrice } from '@/helpers'; // Utility functions for formatting
-import { fetchOrders } from '@/services/ordersService'; // API call to fetch order list
+import { fetchOrders } from '@/services/orderService'; // API call to fetch order list
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import { useToast } from 'primevue/usetoast';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+
+const { showOverlay, hideOverlay } = useLoadingOverlay();
 
 /* ===== Setup ===== */
 const router = useRouter()

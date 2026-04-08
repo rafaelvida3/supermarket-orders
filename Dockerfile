@@ -35,7 +35,6 @@ COPY . .
 COPY --from=frontend_builder /app/public/build /var/www/public/build
 
 RUN mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
-    && touch database/database.sqlite \
     && composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader --no-progress \
     && chmod -R 775 storage bootstrap/cache database
 

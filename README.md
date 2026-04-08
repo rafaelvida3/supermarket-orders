@@ -19,7 +19,7 @@ O projeto atende aos requisitos do teste (formulário de pedidos, itens com quan
 
 - **Back-end:** Laravel 12 (API stateless)  
   - Controllers: `ProductController`, `OrderController`.  
-  - Rotas API em `/api` (ex.: `/api/produtos`, `/api/pedidos`).  
+  - Rotas API em `/api` (ex.: `/api/products`, `/api/orders`).  
   - **Regras de domínio críticas no back-end** (ex.: checar estoque e debitar) - evita confiar apenas na validação do front.
 
 - **Front-end:** Vue 3 + Vite + Vue Router + PrimeVue + TailwindCSS  
@@ -42,7 +42,7 @@ O projeto atende aos requisitos do teste (formulário de pedidos, itens com quan
 3. **Lista = produtos + quantidade** → grid de itens com `AutoComplete` (produto) + `InputNumber` (qty)  
 4. **Alterar quantidade / excluir item** → botões + binding reativo  
 5. **Total recalculado a cada alteração** → feito via `watch` profundo em `items`, que atualiza `total.value` sempre que qualquer item muda (`qty` ou `price`), garantindo reatividade.
-6. **Salvar tudo no banco** → `POST /api/pedidos` (Laravel migrations/models)  
+6. **Salvar tudo no banco** → `POST /api/orders` (Laravel migrations/models)  
 7. **Debitar estoque ao salvar** → regra no `OrderController@store` (transação)  
 8. **Alertar indisponibilidade** → validação server-side (422) + toast no front  
 9. **Mostrar estoque atual** → o estoque disponível de cada produto é exibido logo abaixo do campo de quantidade, após a seleção do item, usando o valor `qty_stock` retornado pela API.
@@ -58,9 +58,9 @@ O projeto atende aos requisitos do teste (formulário de pedidos, itens com quan
 ## API (Laravel)
 
 ### Rotas
-- `GET /api/produtos` → lista produtos (inclui `qty_stock`)  
-- `GET /api/pedidos` → lista pedidos (com totals)  
-- `POST /api/pedidos` → cria pedido com payload:
+- `GET /api/products` → lista produtos (inclui `qty_stock`)  
+- `GET /api/orders` → lista pedidos (com totals)  
+- `POST /api/orders` → cria pedido com payload:
 
     ```
   {
@@ -132,7 +132,7 @@ Isso irá:
 
 ## Testes
 
-Um teste automatizado foi implementado com o PHPUnit, framework nativo do Laravel. O teste valida o endpoint `/api/produtos`, garantindo que a API retorne uma resposta JSON com status 200.
+Um teste automatizado foi implementado com o PHPUnit, framework nativo do Laravel. O teste valida o endpoint `/api/products`, garantindo que a API retorne uma resposta JSON com status 200.
 
 Para executar o teste:
 

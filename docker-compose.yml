@@ -9,15 +9,6 @@ services:
     volumes:
       - .:/var/www
       - vendor_cache:/var/www/vendor
-    environment:
-      APP_ENV: local
-      APP_DEBUG: "true"
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: supermarket_orders
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
     depends_on:
       - postgres
     command: >
@@ -40,19 +31,13 @@ services:
           cp .env.example .env
         fi
 
-        if [ ! -d vendor ] || [ -z "$(ls -A vendor 2>/dev/null)" ]; then
-          echo "Running composer install..."
-          composer install --no-interaction --prefer-dist
-        fi
+        echo "Running composer install..."
+        composer install --no-interaction --prefer-dist
 
         if ! grep -q "^APP_KEY=" .env || [ -z "$(grep "^APP_KEY=" .env | cut -d "=" -f2)" ]; then
           echo "Generating APP_KEY..."
           php artisan key:generate --force
         fi
-
-        echo "Clearing Laravel config cache..."
-        php artisan config:clear
-        php artisan cache:clear
 
         echo "Running migrations..."
         php artisan migrate --force
@@ -68,7 +53,6 @@ services:
 
   frontend:
     image: node:20
-    container_name: supermarket-orders-frontend
     working_dir: /app
     ports:
       - "5173:5173"
@@ -82,17 +66,13 @@ services:
     command: >
       sh -c '
         set -e
-        if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then
-          echo "Installing dependencies..."
-          npm install
-        fi
+        npm install
         echo "Starting Vite dev server..."
         npm run dev -- --host 0.0.0.0 --port 5173
       '
 
   postgres:
     image: postgres:18
-    container_name: supermarket-orders-postgres
     ports:
       - "5432:5432"
     environment:

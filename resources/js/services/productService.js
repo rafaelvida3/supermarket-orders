@@ -1,6 +1,6 @@
-import axios from 'axios'
-
 /* ===== Products Service ===== */
+
+import apiClient from './apiClient';
 
 /**
  * Fetches products from the API based on a search query.
@@ -11,12 +11,12 @@ import axios from 'axios'
  * @returns {Promise<Array>} A promise that resolves with the list of matching products.
  * @throws {Error} Throws an error if the API request fails.
  */
-export const fetchProducts = async (query) => {
-  try {
-    const { data } = await axios.get(`/api/products?q=${query}`)
-    return data
-  } catch (error) {
-    console.error('Error fetching products:', error)
-    throw error
-  }
-}
+export const fetchProducts = async query => {
+    const response = await apiClient.get('/products', {
+        params: {
+            q: query,
+        },
+    });
+
+    return response.data;
+};

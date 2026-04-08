@@ -1,38 +1,38 @@
 /* ===== Imports ===== */
-import LoadingOverlayPlugin from '@/plugins/loadingOverlay.js'; // Custom plugin for global loading overlay
-import Lara from '@primevue/themes/lara'; // PrimeVue Lara theme preset
-import 'primeicons/primeicons.css'; // PrimeIcons icon set
-import PrimeVue from 'primevue/config'; // PrimeVue configuration plugin
-import Toast from 'primevue/toast'; // Toast component
-import ToastService from 'primevue/toastservice'; // Toast service for global notifications
-import { createApp } from 'vue'
-import App from './components/App.vue'; // Root application component
-import router from './router'; // Vue Router instance
+import Lara from '@primeuix/themes/lara';
+import 'primeicons/primeicons.css';
+import PrimeVue from 'primevue/config';
+import Toast from 'primevue/toast';
+import ToastService from 'primevue/toastservice';
+import { createApp } from 'vue';
+
+import App from './App.vue';
+import router from './router';
 
 /* ===== Create Vue app instance ===== */
-const app = createApp(App)
+const app = createApp(App);
 
 /* ===== Register plugins and global components ===== */
-app
-  .use(router)                    // Enables routing
-  .use(PrimeVue, {                // Configures PrimeVue with theme and locale
-    theme: {
-      preset: Lara
-    },
-    locale: {
-      emptySearchMessage: 'Nenhum produto encontrado',
-      emptyMessage: ''
-    }
-  })
-  .use(ToastService)              // Enables global toast notifications
-  .use(LoadingOverlayPlugin)      // Registers global loading overlay plugin
-  .component('Toast', Toast)      // Registers Toast component globally
+app.use(router);
+app.use(PrimeVue, {
+  theme: {
+    preset: Lara
+  },
+  locale: {
+    emptySearchMessage: 'Nenhum produto encontrado',
+    emptyMessage: ''
+  }
+});
+app.use(ToastService);
+app.component('Toast', Toast);
 
 /* ===== Customize default Toast behavior ===== */
-const toast = app.config.globalProperties.$toast
-const originalAdd = toast.add
-// Adds a default display time (life) for all toast messages
-toast.add = (msg) => originalAdd({ life: 2500, ...msg })
+const toast = app.config.globalProperties.$toast;
+const original_add = toast.add;
+
+toast.add = (message) => {
+  original_add({ life: 2500, ...message });
+};
 
 /* ===== Mount app to DOM ===== */
-app.mount('#app')
+app.mount('#app');

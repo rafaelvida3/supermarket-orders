@@ -13,5 +13,5 @@
 </template>
 
 <script setup>
-// No additional logic required for this layout
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue';
 </script>

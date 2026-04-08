@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-/* ===== Page components ===== */
-import NotFound from '@/components/pages/NotFound.vue'
-import OrderPage from '@/components/pages/OrderPage.vue'
-import OrdersList from '@/components/pages/OrdersList.vue'
+/* ===== Pages ===== */
+import NotFound from '@/pages/NotFound.vue'
+import OrderPage from '@/pages/OrderPage.vue'
+import OrdersList from '@/pages/OrdersList.vue'
 
 /* ===== Route definitions ===== */
 const routes = [

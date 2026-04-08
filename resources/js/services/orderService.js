@@ -1,6 +1,7 @@
-import axios from 'axios'
 
 /* ===== Orders Service ===== */
+
+import apiClient from './apiClient';
 
 /**
  * Fetches all orders from the API.
@@ -11,14 +12,9 @@ import axios from 'axios'
  * @throws {Error} Throws an error if the API request fails.
  */
 export const fetchOrders = async () => {
-  try {
-    const { data } = await axios.get('/api/orders')
-    return data
-  } catch (error) {
-    console.error('Error fetching orders:', error)
-    throw error
-  }
-}
+    const response = await apiClient.get('/orders');
+    return response.data;
+};
 
 /**
  * Creates a new order via API.
@@ -29,15 +25,10 @@ export const fetchOrders = async () => {
  * @returns {Promise<Object>} A promise that resolves with the created order data.
  * @throws {Error} Throws an error if the API request fails.
  */
-export const createOrder = async (payload) => {
-  try {
-    const { data } = await axios.post(`/api/orders`, payload)
-    return data
-  } catch (error) {
-    console.error('Error creating order:', error)
-    throw error
-  }
-}
+export const createOrder = async payload => {
+    const response = await apiClient.post('/orders', payload);
+    return response.data;
+};
 
 /**
  * Fetches a single order by ID.
@@ -48,12 +39,7 @@ export const createOrder = async (payload) => {
  * @returns {Promise<Object>} A promise that resolves with the order data.
  * @throws {Error} Throws an error if the API request fails.
  */
-export const getOrderById = async (id) => {
-  try {
-    const { data } = await axios.get(`/api/orders/${id}`)
-    return data
-  } catch (error) {
-    console.error(`Error fetching order with ID ${id}:`, error)
-    throw error
-  }
-}
+export const getOrderById = async orderId => {
+    const response = await apiClient.get(`/orders/${orderId}`);
+    return response.data;
+};

@@ -1,7 +1,7 @@
 <template>
   <!-- Overlay container: covers the entire screen when visible -->
   <div
-    v-if="visible"
+    v-if="isVisible"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
   >
     <!-- Loading spinner displayed at the center -->
@@ -14,9 +14,8 @@
 </template>
 
 <script setup>
-import { ProgressSpinner } from 'primevue';
-import { inject } from 'vue';
+import { useLoadingOverlay } from '@/composables/useLoadingOverlay';
+import ProgressSpinner from 'primevue/progressspinner';
 
-/* Reactive visibility state injected from the global provider */
-const visible = inject('overlayVisible')
+const { isVisible } = useLoadingOverlay();
 </script>
