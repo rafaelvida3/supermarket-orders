@@ -24,23 +24,23 @@ use App\Http\Controllers\OrderController;
 Route::middleware('api')->group(function () {
 
     /* ===== Product Routes ===== */
-    Route::prefix('produtos')->group(function () {
-        // GET /api/produtos → List or search products
+    Route::prefix('products')->group(function () {
+        // GET /api/products → List or search products
         Route::get('/', [ProductController::class, 'index'])
             ->name('api.products.index');
     });
 
     /* ===== Order Routes ===== */
-    Route::prefix('pedidos')->group(function () {
-        // GET /api/pedidos → List all orders
+    Route::prefix('orders')->group(function () {
+        // GET /api/orders → List all orders
         Route::get('/', [OrderController::class, 'index'])
             ->name('api.orders.index');
 
-        // POST /api/pedidos → Create new order
+        // POST /api/orders → Create new order
         Route::post('/', [OrderController::class, 'store'])
             ->name('api.orders.store');
 
-        // GET /api/pedidos/{id} → View specific order
+        // GET /api/orders/{id} → View specific order
         Route::get('{id}', [OrderController::class, 'show'])
             ->whereNumber('id')
             ->name('api.orders.show');

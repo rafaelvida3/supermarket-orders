@@ -25,7 +25,7 @@
     </div>
 
     <!-- Mobile cards -->
-    <div v-if="!loading && paginatedOrders.length > 0" class="sm:hidden space-y-3">
+    <div v-if="!loading && paginatedOrders.length > 0" class="md:hidden space-y-3">
       <article
         v-for="order in paginatedOrders"
         :key="order.id"
@@ -108,7 +108,7 @@
     </div>
 
     <!-- Desktop table -->
-    <div class="hidden sm:block overflow-x-auto rounded-md border dark:border-gray-700">
+    <div class="hidden md:block overflow-x-auto rounded-md border dark:border-gray-700">
       <!-- Orders table -->
       <DataTable
         class="min-w-full text-sm sm:text-base dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700"

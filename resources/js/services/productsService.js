@@ -13,7 +13,7 @@ import axios from 'axios'
  */
 export const fetchProducts = async (query) => {
   try {
-    const { data } = await axios.get(`/api/produtos?q=${query}`)
+    const { data } = await axios.get(`/api/products?q=${query}`)
     return data
   } catch (error) {
     console.error('Error fetching products:', error)

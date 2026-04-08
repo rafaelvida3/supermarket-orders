@@ -12,32 +12,56 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: supermarket_orders
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - postgres
     command: >
       sh -c '
         set -e
+
+        echo "Waiting for Postgres..."
+
+        until pg_isready -h postgres -p 5432 -U postgres; do
+          echo "Postgres not ready yet..."
+          sleep 1
+        done
+
+        echo "Postgres is ready!"
+
         git config --global --add safe.directory /var/www
+
         if [ ! -f .env ]; then
           echo "No .env found - copying from .env.example..."
           cp .env.example .env
         fi
-        if [ ! -f database/database.sqlite ]; then
-          mkdir -p database
-          touch database/database.sqlite
-        fi
+
         if [ ! -d vendor ] || [ -z "$(ls -A vendor 2>/dev/null)" ]; then
           echo "Running composer install..."
           composer install --no-interaction --prefer-dist
         fi
+
         if ! grep -q "^APP_KEY=" .env || [ -z "$(grep "^APP_KEY=" .env | cut -d "=" -f2)" ]; then
           echo "Generating APP_KEY..."
           php artisan key:generate --force
         fi
+
+        echo "Clearing Laravel config cache..."
+        php artisan config:clear
+        php artisan cache:clear
+
         echo "Running migrations..."
         php artisan migrate --force
+
         if ! php artisan tinker --execute="exit(App\\Models\\Product::exists() ? 0 : 1);" >/dev/null 2>&1; then
           echo "Importing products..."
           php artisan products:import
         fi
+
         echo "Starting Laravel server..."
         php artisan serve --host=0.0.0.0 --port=8000
       '
@@ -66,6 +90,19 @@ services:
         npm run dev -- --host 0.0.0.0 --port 5173
       '
 
+  postgres:
+    image: postgres:18
+    container_name: supermarket-orders-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: supermarket_orders
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
 volumes:
   vendor_cache:
   node_modules_cache:
+  postgres_data:

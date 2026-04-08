@@ -12,7 +12,7 @@ import axios from 'axios'
  */
 export const fetchOrders = async () => {
   try {
-    const { data } = await axios.get('/api/pedidos')
+    const { data } = await axios.get('/api/orders')
     return data
   } catch (error) {
     console.error('Error fetching orders:', error)
@@ -31,7 +31,7 @@ export const fetchOrders = async () => {
  */
 export const createOrder = async (payload) => {
   try {
-    const { data } = await axios.post(`/api/pedidos`, payload)
+    const { data } = await axios.post(`/api/orders`, payload)
     return data
   } catch (error) {
     console.error('Error creating order:', error)
@@ -50,7 +50,7 @@ export const createOrder = async (payload) => {
  */
 export const getOrderById = async (id) => {
   try {
-    const { data } = await axios.get(`/api/pedidos/${id}`)
+    const { data } = await axios.get(`/api/orders/${id}`)
     return data
   } catch (error) {
     console.error(`Error fetching order with ID ${id}:`, error)

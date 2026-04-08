@@ -22,23 +22,27 @@ class ProductController extends Controller
      * @return JsonResponse JSON response with the list of matching products.
      */
     public function index(Request $request): JsonResponse {
-        // Base query selecting only the required product fields
-        $query = Product::select([
-            'id',
-            'name',
-            'price',
-            'qty_stock'
-        ]);
+        $query = Product::query()
+            ->select(['id', 'name', 'price', 'qty_stock']);
 
-        // If a search term is provided, filter products by name (case-insensitive LIKE)
-        if ($q = $request->query('q')) {
-            $query->where('name', 'LIKE', "%{$q}%");
+        $search = $request->query('q');
+
+        if ($search && strlen($search) >= 2) {
+            try {
+                $query->whereRaw(
+                    'unaccent(name) ILIKE unaccent(?)',
+                    ["%{$search}%"]
+                );
+            } catch (\Throwable $e) {
+                $query->where('name', 'ILIKE', "%{$search}%");
+            }
         }
 
-        // Limit results to improve performance and avoid overloading the autocomplete
-        $products = $query->orderBy('name')->limit(10)->get();
+        $products = $query
+            ->orderBy('name')
+            ->limit(10)
+            ->get();
 
-        // Return the product list as JSON
         return response()->json($products);
     }
 }
