@@ -1,139 +1,478 @@
-# Supermarket Orders - Laravel + Vue 3
+# Supermarket Orders
 
-Formulário de cadastro de pedidos de supermercado com **Laravel (API REST)** no back-end e **Vue 3 + PrimeVue + Tailwind** no front-end.  
+A full-stack supermarket order management application built with **Laravel 12**, **Vue 3**, and **PostgreSQL**.
 
-O projeto atende aos requisitos do teste (formulário de pedidos, itens com quantidades, cálculo de total em tempo real, persistência, débito de estoque, alerta de indisponibilidade e listagem do estoque atual) e documenta as **decisões de arquitetura** e **como rodar**.
+This project started as a technical challenge and was later refined into a portfolio case study focused on **separation of responsibilities**, **stock integrity**, **sound modeling decisions**, and **clear architecture**.
 
-## Sumário
-- [Arquitetura & Decisões](#arquitetura--decisões)
-- [Requisitos do Teste e Onde Estão no Código](#requisitos-do-teste-e-onde-estão-no-código)
-- [Modelagem de Dados](#modelagem-de-dados)
-- [API (Laravel)](#api-laravel)
-- [Front-end (Vue 3)](#front-end-vue-3)
-- [Validação, Erros (422) e UX](#validação-erros-422-e-ux)
-- [Overlay/Loading Global](#overlayloading-global)
-- [Como Rodar - Docker](#como-rodar-docker)
-- [Testes](#testes)
+**Live demo:** https://supermarket-orders.onrender.com/
 
-## Arquitetura & Decisões
+## Overview
 
-- **Back-end:** Laravel 12 (API stateless)  
-  - Controllers: `ProductController`, `OrderController`.  
-  - Rotas API em `/api` (ex.: `/api/products`, `/api/orders`).  
-  - **Regras de domínio críticas no back-end** (ex.: checar estoque e debitar) - evita confiar apenas na validação do front.
+The application covers the core order flow end to end:
 
-- **Front-end:** Vue 3 + Vite + Vue Router + PrimeVue + TailwindCSS  
-  - SPA minimalista com páginas de **Lista de Pedidos** e **Novo Pedido**.  
-  - **PrimeVue** para componentes (DataTable, InputNumber, AutoComplete, Toast, ProgressSpinner).  
-  - **Toast** para feedbacks; **overlay global** para carregamentos (via plugin).  
-  - **Dark mode** com classes `dark:` do Tailwind aplicadas no layout base.
+- initial catalog import from an `.xlsx` spreadsheet
+- product search with autocomplete
+- dynamic order building with multiple items
+- per-item subtotal and order total calculation
+- stock validation on the front end and, most importantly, on the back end
+- order and order item persistence
+- stock deduction at confirmation time
+- listing previously created orders
+- detailed view of a saved order
 
-- **Estilo & Acessibilidade:** Tailwind para produtividade; contraste adequado no dark mode.
+More than simply "working", the project was organized to make it explicit **where each rule lives** and **how the domain is protected when concurrency and inconsistent input are involved**.
 
-- **Por que estas escolhas?**  
-  - A stack é popular, robusta e acelera o desenvolvimento.  
-  - PrimeVue traz componentes form/UX maduros (AutoComplete, DataTable, Toast).  
-  - Regras críticas (estoque, total) não ficam só no cliente.
+---
 
-## Requisitos do Teste e Onde Estão no Código
+## What this project demonstrates
 
-1. **Formulário de cadastro de pedidos** → `resources/js/components/pages/OrderPage.vue`  
-2. **Nome do Cliente, Data de Entrega e lista de compras** → campos no `OrderPage.vue`  
-3. **Lista = produtos + quantidade** → grid de itens com `AutoComplete` (produto) + `InputNumber` (qty)  
-4. **Alterar quantidade / excluir item** → botões + binding reativo  
-5. **Total recalculado a cada alteração** → feito via `watch` profundo em `items`, que atualiza `total.value` sempre que qualquer item muda (`qty` ou `price`), garantindo reatividade.
-6. **Salvar tudo no banco** → `POST /api/orders` (Laravel migrations/models)  
-7. **Debitar estoque ao salvar** → regra no `OrderController@store` (transação)  
-8. **Alertar indisponibilidade** → validação server-side (422) + toast no front  
-9. **Mostrar estoque atual** → o estoque disponível de cada produto é exibido logo abaixo do campo de quantidade, após a seleção do item, usando o valor `qty_stock` retornado pela API.
+This repository was structured to highlight a few points I consider essential in business software:
 
-> Os itens acima refletem integralmente os requisitos 1–9 do teste. O README cumpre o item 10 (decisões e instruções de execução).
- 
-## Modelagem de Dados
+- **Lean controllers**: the critical order creation orchestration is not scattered across the controller.
+- **Server-side domain protection**: the front end improves UX, but the source of truth remains on the back end.
+- **Consistent persistence**: order creation and stock deduction happen inside a **transaction**.
+- **Concurrency handled carefully**: order products are loaded with `lockForUpdate()` before stock is decremented.
+- **Modeling with preserved history**: `order_items` stores `unit_price` and `subtotal`, avoiding reliance on the current catalog price to reconstruct past orders.
+- **Defense in depth**: the front end tries to avoid duplicate selection, but the back end also consolidates repeated products before saving.
+- **Controlled scope**: no overengineering. The project uses abstractions only where they genuinely improve maintainability.
 
-- **products**: `id`, `name`, `price` (decimal 10,2), `qty_stock` (int), timestamps 
-- **orders**: `id`, `customer_name`, `delivery_date` (datetime), `total` (decimal 10,2), timestamps  
-- **order_items**: `id`, `order_id` (FK), `product_id` (FK), `qty` (int), `price` (decimal 10,2), `subtotal` (decimal 10,2), timestamps 
+---
 
-## API (Laravel)
+## Architecture
 
-### Rotas
-- `GET /api/products` → lista produtos (inclui `qty_stock`)  
-- `GET /api/orders` → lista pedidos (com totals)  
-- `POST /api/orders` → cria pedido com payload:
+### Back-end
 
-    ```
+- **Laravel 12** as a REST API
+- **PostgreSQL** as the primary database
+- **Maatwebsite Excel** for product spreadsheet import
+- **CreateOrderAction** to encapsulate the most important use case in the system
+- **Form Request** for input validation
+- **Eloquent** for modeling and persistence
+
+### Front-end
+
+- **Vue 3** with the Composition API
+- **Vite** as the bundler
+- **Vue Router** for SPA navigation
+- **PrimeVue** for UI components
+- **Tailwind CSS** for layout and responsiveness
+- **Axios** for API consumption
+- **Vitest** for front-end unit tests
+
+### Infrastructure
+
+- **Docker Compose** for local development with three services:
+  - `app` (Laravel / PHP)
+  - `frontend` (Vite / Vue)
+  - `postgres` (PostgreSQL 18)
+- **Multi-stage Dockerfile** for local usage and for a build/deploy flow closer to production
+
+---
+
+## Main business flow
+
+### 1. Initial catalog
+
+The catalog is loaded from `storage/app/Products.xlsx`.
+
+The `php artisan products:import` command:
+
+- reads the spreadsheet through `ProductsImport`
+- validates the presence of required columns for each row
+- creates products in the database
+- avoids reimporting when records already exist
+
+The spreadsheet included in the repository contains **50 valid products** ready for import.
+
+### 2. Order building
+
+On the front end, the user provides:
+
+- customer name
+- delivery date
+- list of products and quantities
+
+Order building is centralized in the `useOrderForm` composable, which handles:
+
+- form state
+- product autocomplete
+- duplicate item merging in the interface
+- total calculation
+- payload assembly for the API
+- order loading in view mode
+
+### 3. Safe order creation
+
+Order creation is executed in `CreateOrderAction`.
+
+This flow does the following:
+
+1. consolidates repeated products in the payload
+2. opens a database transaction
+3. loads products with `lockForUpdate()`
+4. validates existence and stock availability
+5. creates the order with an initial zero total
+6. creates `order_items` with a unit price snapshot
+7. deducts stock from each product
+8. updates the final order total
+
+This design avoids two common problems:
+
+- **partially saved orders**
+- **inconsistent stock deductions in concurrent scenarios**
+
+---
+
+## Modeling decisions
+
+### Main tables
+
+#### `products`
+Product catalog and current stock.
+
+Relevant fields:
+- `id`
+- `name`
+- `price`
+- `qty_stock`
+
+#### `orders`
+Order header.
+
+Relevant fields:
+- `id`
+- `customer_name`
+- `delivery_date`
+- `total`
+
+#### `order_items`
+Order items.
+
+Relevant fields:
+- `order_id`
+- `product_id`
+- `qty`
+- `unit_price`
+- `subtotal`
+
+### Why store `unit_price` and `subtotal`?
+
+Because an order is a historical record. If the catalog price changes tomorrow, yesterday's order must remain intact.
+
+### Why have `unique(order_id, product_id)`?
+
+Because the same product should not exist more than once inside the same saved order. This also forces the system to preserve model consistency at the database level, not only in the UI.
+
+---
+
+## Implementation decisions
+
+### Lean controller + dedicated action
+
+Order creation was extracted to `app/Actions/Orders/CreateOrderAction.php`.
+
+This reduces controller coupling and makes the critical rule easier to:
+
+- test
+- evolve
+- reuse
+- audit
+
+### Front-end composable instead of a global store
+
+The form state was centralized in `useOrderForm.js`.
+
+For this scope, using Pinia or Vuex would be unnecessary. The composable solves the problem well with less complexity.
+
+### Global overlay without a state library
+
+Shared loading was implemented with `useLoadingOverlay`, using reactive state at module scope. It is simple, readable, and sufficient for the current need.
+
+### Responsiveness handled with specific layouts
+
+`OrderItemsSection.vue` has a dedicated structure for desktop and mobile.
+
+There is some markup duplication, but it was a conscious trade-off to preserve interaction clarity in each context, especially when filling products and quantities on smaller screens.
+
+### Product search guided by UX
+
+The `GET /api/products` endpoint:
+
+- accepts the `q` parameter
+- uses `ILIKE` for case-insensitive search in PostgreSQL
+- limits the response to 10 items
+
+This limit prevents noisy autocomplete behavior and reduces unnecessary rendering cost.
+
+---
+
+## Project structure
+
+```text
+app/
+├── Actions/Orders/CreateOrderAction.php      # Order creation use case
+├── Console/Commands/ImportProducts.php       # Product spreadsheet import
+├── Http/Controllers/
+│   ├── OrderController.php                   # List, create, and show orders
+│   └── ProductController.php                 # Search/list products
+├── Http/Requests/StoreOrderRequest.php       # Order payload validation
+├── Imports/ProductsImport.php                # Spreadsheet-to-Product mapping
+└── Models/                                   # Domain entities
+
+resources/js/
+├── components/
+│   ├── common/LoadingOverlay.vue             # Global loading overlay
+│   └── orders/OrderItemsSection.vue          # Order items UI
+├── composables/
+│   ├── useLoadingOverlay.js                  # Shared loading state
+│   └── useOrderForm.js                       # Front-end form rules
+├── pages/
+│   ├── OrdersList.vue                        # Orders list
+│   ├── OrderPage.vue                         # New order / view order
+│   └── NotFound.vue                          # SPA 404 page
+├── services/
+│   ├── apiClient.js                          # Axios instance
+│   ├── orderService.js                       # Orders API consumption
+│   └── productService.js                     # Products API consumption
+└── helpers/index.js                          # Date and currency formatting
+
+database/
+├── migrations/                               # Database structure
+└── seeders/OrderSeeder.php                   # Demo order seeder
+
+docker-compose.yml                            # Full local environment
+Dockerfile                                    # Multi-stage build
+```
+
+---
+
+## API endpoints
+
+### `GET /api/products`
+Lists products or searches by term.
+
+Example:
+
+```http
+GET /api/products?q=ar
+```
+
+Response:
+
+```json
+[
   {
-    "customer_name": "Fulano",
-    "delivery_date": "2025-10-31 13:30:00",
-    "items": [
-      { "product_id": 1, "qty": 2 },
-      { "product_id": 5, "qty": 1 }
-    ]
+    "id": 1,
+    "name": "RICE...",
+    "price": "10.50",
+    "qty_stock": 20
   }
+]
+```
 
-## Front-end (Vue 3)
+### `GET /api/orders`
+Returns the order list in descending order.
 
-### Páginas principais
-- `OrdersList.vue` - tabela (`PrimeVue DataTable`) com ordenação e paginação.
-- `OrderPage.vue` - formulário reativo de novo pedido/visualização.
+### `GET /api/orders/{id}`
+Returns the order header and its items.
 
-### Componentes/Composables
-- Toast global (`PrimeVue`) no `App.vue`.
-- Overlay (`LoadingOverlay.vue`) registrado via plugin para poder chamar `showOverlay()`/`hideOverlay()` sem importar localmente.
-- Helpers: formatação de moeda/data.
+### `POST /api/orders`
+Creates a new order.
 
-### AutoComplete (produto)
-- `v-model="item.product"` (objeto) + `optionLabel="name"` + `forceSelection`
-- No `@item-select`, gravamos `product_id`, `price` e resetamos `qty=1`.
+Payload:
 
-## Validação, Erros (422) e UX
+```json
+{
+  "customer_name": "Rafael",
+  "delivery_date": "2026-04-10",
+  "items": [
+    { "product_id": 1, "qty": 2 },
+    { "product_id": 5, "qty": 1 }
+  ]
+}
+```
 
-- Front-end impede envio quando faltam campos (nome, data, pelo menos 1 item).
-- Back-end retorna 422 detalhando quais itens estouraram o estoque.
-- O front captura o erro e mostra toast.
-- Por que redundante? UX melhor (feedback imediato) + segurança (regra confiável no servidor).
+Success response:
 
-## Overlay/Loading Global
+```json
+{
+  "order_id": 1,
+  "total": "28.00",
+  "message": "Order created successfully."
+}
+```
 
-Para evitar `import { showOverlay }` em todo lugar, foi criado um plugin global `LoadingOverlay`
+---
 
-## Como Rodar - Docker
+## Validation and rule protection
 
-O projeto pode ser executado de forma totalmente containerizada via **Docker Compose**, com o **Laravel** e o **Vue 3 + Vite** em serviços separados.
+### On the front end
 
-### Requisitos
-- **Docker Desktop** (com WSL 2 habilitado no Windows)  
-- Um servidor **MySQL local** acessível em `host.docker.internal` (ex.: o MySQL do XAMPP)
+- prevents submission without a name
+- prevents submission without a date
+- requires at least one product
+- shows subtotal and total in real time
+- warns when a product is out of stock
+- prevents exceeding stock through `InputNumber`
+- tries to merge duplicate items before submission
 
-### Banco de dados
-Antes de iniciar os containers, crie o banco `supermarket_orders` no seu MySQL local (via phpMyAdmin ou CLI).  
+### On the back end
 
-Em seguida, defina o **usuário e senha do banco** no arquivo `.env.example` do Laravel, por exemplo:
+- validates payload structure with `StoreOrderRequest`
+- validates product existence
+- validates minimum quantity
+- validates available stock using data locked inside the transaction
+- consolidates duplicate items regardless of what came from the client
 
-    DB_CONNECTION=mysql
-    DB_HOST=host.docker.internal
-    DB_PORT=3306
-    DB_DATABASE=supermarket_orders
-    DB_USERNAME=root
-    DB_PASSWORD=password
-  
-> **Antes de enviar ou versionar o projeto**, restaure o `.env.example` ao seu conteúdo original (sem senhas nem chaves) para evitar expor informações sensíveis no repositório público. O arquivo `.env.example` é temporariamente ajustado para conter variáveis de ambiente completas para facilitar a execução automática dentro do Docker.
+In other words: **the interface helps; the server guarantees**.
 
-Na raiz do projeto, execute o comando abaixo:
+---
 
-    docker compose up --build
+## Seeds and demo data
 
-Isso irá:
-- Construir as imagens (Laravel e Vue).
-- Executar automaticamente as migrations e importar os produtos.
-- Iniciar o servidor Laravel em http://localhost:8000
-- Iniciar o front-end Vue em http://localhost:5173
+In addition to catalog import, the project includes `OrderSeeder` with **6 sample orders**.
 
-## Testes
+An important detail: the seeder does not insert records "by force". It calls `CreateOrderAction` itself, keeping the demo data aligned with the same real business rules.
 
-Um teste automatizado foi implementado com o PHPUnit, framework nativo do Laravel. O teste valida o endpoint `/api/products`, garantindo que a API retorne uma resposta JSON com status 200.
+This is a small but important detail that helps avoid misleading seed data.
 
-Para executar o teste:
+---
 
-    php artisan test --filter=ProductControllerTest
+## Automated tests
+
+The repository includes tests on both the back end and the front end.
+
+### Back-end — PHPUnit
+
+Current coverage for the main scenarios:
+
+- order creation with stock deduction
+- rejection due to insufficient stock
+- order list sorting
+- order details
+- 404 for a missing order
+- duplicate product consolidation
+- valid product import
+- invalid spreadsheet row discard
+- product list filtering and limiting
+
+### Front-end — Vitest
+
+Current coverage for:
+
+- total calculation in the composable
+- item addition and removal
+- payload assembly
+- product suggestion loading
+- formatting helpers
+- order and product services
+
+In total, the project currently includes **28 automated tests** covering the most important domain and interface flows.
+
+---
+
+## Running with Docker
+
+### Requirements
+
+- Docker Desktop
+- Docker Compose
+
+### Steps
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Available services:
+
+- Laravel API: `http://localhost:8000`
+- Vue/Vite: `http://localhost:5173`
+- PostgreSQL: `localhost:5432`
+
+### What the environment does automatically
+
+When the `app` service starts, the project:
+
+- installs PHP dependencies
+- creates `.env` if it does not exist
+- generates `APP_KEY` if needed
+- runs migrations
+- imports products from the spreadsheet
+- runs `OrderSeeder`
+- starts the Laravel server
+
+The `frontend` service installs Node dependencies and starts Vite with hot reload.
+
+---
+
+## Running without Docker
+
+### Back-end
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan products:import
+php artisan db:seed --class=OrderSeeder
+php artisan serve
+```
+
+### Front-end
+
+```bash
+npm install
+npm run dev
+```
+
+### Database
+
+This project is configured for **PostgreSQL**.
+
+The search endpoint uses `ILIKE`, which is PostgreSQL-specific. If the goal is to port it to MySQL, this point would need to be adjusted.
+
+---
+
+## Useful commands
+
+```bash
+# Run back-end tests
+php artisan test
+
+# Run front-end tests
+npm run test:front
+
+# Import catalog manually
+php artisan products:import
+```
+
+---
+
+## What I would do in a next iteration
+
+If this case evolved into a real product, the most natural next steps would be:
+
+- authentication and access profiles
+- order cancellation with stock restoration
+- stock movement history
+- pagination and filtering in the catalog beyond autocomplete
+- API Resources for standardized responses
+- OpenAPI / Swagger documentation
+- observability and business logs
+- CI pipeline to run PHPUnit and Vitest automatically
+
+---
+
+## Final notes
+
+This project was designed to demonstrate a pragmatic approach:
+
+- solve the business problem
+- protect the data
+- keep the code readable
+- organize the application in a way that matches the scope
+
+There is no abstraction for vanity. The existing separations were chosen to make the system more predictable, testable, and easier to evolve.
