@@ -5,8 +5,10 @@ namespace App\Imports;
 use App\Models\Product;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithUpserts;
+use Maatwebsite\Excel\Concerns\WithUpsertColumns;
 
-class ProductsImport implements ToModel, WithHeadingRow
+class ProductsImport implements ToModel, WithHeadingRow, WithUpserts, WithUpsertColumns
 {
     /**
      * @param array<string, mixed> $row
@@ -28,5 +30,22 @@ class ProductsImport implements ToModel, WithHeadingRow
         }
 
         return null;
+    }
+
+    public function uniqueBy(): string
+    {
+        return 'id';
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function upsertColumns(): array
+    {
+        return [
+            'name',
+            'price',
+            'qty_stock',
+        ];
     }
 }

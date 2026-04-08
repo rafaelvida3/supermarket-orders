@@ -12,7 +12,7 @@ vi.mock('@/services/apiClient', () => ({
     },
 }));
 
-import { fetchProducts } from '@/services/productService';
+import { fetchProducts, fetchStockProducts } from '@/services/productService';
 
 describe('productService', () => {
     beforeEach(() => {
@@ -31,6 +31,17 @@ describe('productService', () => {
         });
 
         expect(result).toEqual([{ id: 1, name: 'Rice' }]);
+    });
+
+    it('fetches the full stock list', async () => {
+        getMock.mockResolvedValue({
+            data: [{ id: 1, name: 'Rice', qty_stock: 2 }],
+        });
+
+        const result = await fetchStockProducts();
+
+        expect(getMock).toHaveBeenCalledWith('/products/stock');
+        expect(result).toEqual([{ id: 1, name: 'Rice', qty_stock: 2 }]);
     });
 
     it('rethrows request errors', async () => {

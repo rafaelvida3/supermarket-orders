@@ -15,13 +15,23 @@
       </h1>
 
       <!-- Button to create a new order -->
-      <RouterLink
-        :to="{ name: 'orders.new' }"
-        class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition flex justify-center sm:justify-between gap-2 items-center"
-      >
-        <i class="pi pi-plus"></i>
-        Novo Pedido
-      </RouterLink>
+      <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
+        <RouterLink
+          :to="{ name: 'stock.index' }"
+          class="w-full sm:w-auto border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:text-blue-600 dark:hover:text-blue-400 transition flex justify-center gap-2 items-center"
+        >
+          <i class="pi pi-box"></i>
+          Ver Estoque
+        </RouterLink>
+
+        <RouterLink
+          :to="{ name: 'orders.new' }"
+          class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition flex justify-center sm:justify-between gap-2 items-center"
+        >
+          <i class="pi pi-plus"></i>
+          Novo Pedido
+        </RouterLink>
+      </div>
     </div>
 
     <!-- Mobile cards -->

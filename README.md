@@ -19,6 +19,7 @@ The application covers the core order flow end to end:
 - stock deduction at confirmation time
 - listing previously created orders
 - detailed view of a saved order
+- dedicated stock page with current quantity and low-stock visibility
 
 More than simply "working", the project was organized to make it explicit **where each rule lives** and **how the domain is protected when concurrency and inconsistent input are involved**.
 
@@ -55,6 +56,7 @@ This repository was structured to highlight a few points I consider essential in
 - **Vite** as the bundler
 - **Vue Router** for SPA navigation
 - **PrimeVue** for UI components
+- **Inventory page** focused on operational visibility
 - **Tailwind CSS** for layout and responsiveness
 - **Axios** for API consumption
 - **Vitest** for front-end unit tests
@@ -65,7 +67,10 @@ This repository was structured to highlight a few points I consider essential in
   - `app` (Laravel / PHP)
   - `frontend` (Vite / Vue)
   - `postgres` (PostgreSQL 18)
-- **Multi-stage Dockerfile** for local usage and for a build/deploy flow closer to production
+- **Separated bootstrap modes**:
+  - `docker/app/start-app.sh` starts the application container
+  - `docker/app/setup-demo.sh` prepares demo data only when explicitly requested
+- **Multi-stage Dockerfile** for local usage and for a build/deploy flow closer to production, with a production command that starts only the application process
 
 ---
 
@@ -80,9 +85,10 @@ The `php artisan products:import` command:
 - reads the spreadsheet through `ProductsImport`
 - validates the presence of required columns for each row
 - creates products in the database
-- avoids reimporting when records already exist
+- safely reruns through an id-based upsert, updating existing rows when the spreadsheet changes
+- resynchronizes the PostgreSQL sequence after import so future inserts keep working correctly
 
-The spreadsheet included in the repository contains **50 valid products** ready for import.
+The spreadsheet included in the repository contains **50 valid products** ready for import, and the command is idempotent enough to be rerun safely during local setup or demo resets.
 
 ### 2. Order building
 
@@ -204,6 +210,22 @@ The `GET /api/products` endpoint:
 
 This limit prevents noisy autocomplete behavior and reduces unnecessary rendering cost.
 
+### Dedicated stock page
+
+The inventory view is intentionally separate from autocomplete.
+
+Instead of overloading the search endpoint, the application exposes `GET /api/products/stock` to return the full catalog for a dedicated `/estoque` screen. This keeps each endpoint aligned with a single responsibility:
+
+- `GET /api/products` serves autocomplete and quick search
+- `GET /api/products/stock` serves operational inventory visibility
+
+On the front end, the stock page highlights:
+
+- total products
+- low-stock products
+- out-of-stock products
+- current quantity and price per item
+
 ---
 
 ## Project structure
@@ -214,7 +236,7 @@ app/
 ├── Console/Commands/ImportProducts.php       # Product spreadsheet import
 ├── Http/Controllers/
 │   ├── OrderController.php                   # List, create, and show orders
-│   └── ProductController.php                 # Search/list products
+│   └── ProductController.php                 # Search/list products and stock
 ├── Http/Requests/StoreOrderRequest.php       # Order payload validation
 ├── Imports/ProductsImport.php                # Spreadsheet-to-Product mapping
 └── Models/                                   # Domain entities
@@ -239,6 +261,11 @@ resources/js/
 database/
 ├── migrations/                               # Database structure
 └── seeders/OrderSeeder.php                   # Demo order seeder
+
+docker/
+└── app/
+    ├── start-app.sh                          # Regular container startup
+    └── setup-demo.sh                         # Explicit demo bootstrap
 
 docker-compose.yml                            # Full local environment
 Dockerfile                                    # Multi-stage build
@@ -371,6 +398,21 @@ In total, the project currently includes **28 automated tests** covering the mos
 
 ---
 
+## Bootstrap modes
+
+One refinement made after the original technical challenge was separating **application startup** from **demo data bootstrap**.
+
+That distinction matters because migrations, catalog import, and sample seeding are useful for portfolio presentation, but they should not be tied to every container boot or to the main production command.
+
+This repository now keeps those concerns separate:
+
+- **app mode** starts the API normally
+- **demo mode** runs migrations, imports the spreadsheet, and seeds sample orders only when explicitly invoked
+
+This keeps local onboarding simple while making the runtime behavior look closer to a real application lifecycle.
+
+---
+
 ## Running with Docker
 
 ### Requirements
@@ -378,7 +420,7 @@ In total, the project currently includes **28 automated tests** covering the mos
 - Docker Desktop
 - Docker Compose
 
-### Steps
+### Start the application
 
 ```bash
 cp .env.example .env
@@ -391,17 +433,25 @@ Available services:
 - Vue/Vite: `http://localhost:5173`
 - PostgreSQL: `localhost:5432`
 
+### Load demo data explicitly
+
+```bash
+docker compose exec app sh docker/app/setup-demo.sh
+```
+
+This second step is intentional. The application container starts normally, and demo bootstrap is executed only when needed.
+
 ### What the environment does automatically
 
 When the `app` service starts, the project:
 
+- waits for PostgreSQL to become available
 - installs PHP dependencies
 - creates `.env` if it does not exist
 - generates `APP_KEY` if needed
-- runs migrations
-- imports products from the spreadsheet
-- runs `OrderSeeder`
 - starts the Laravel server
+
+It does **not** run migrations, import products, or seed demo orders on every boot.
 
 The `frontend` service installs Node dependencies and starts Vite with hot reload.
 
@@ -409,7 +459,16 @@ The `frontend` service installs Node dependencies and starts Vite with hot reloa
 
 ## Running without Docker
 
-### Back-end
+### App-only setup
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan serve
+```
+
+### Full demo setup
 
 ```bash
 composer install
@@ -418,14 +477,14 @@ php artisan key:generate
 php artisan migrate
 php artisan products:import
 php artisan db:seed --class=OrderSeeder
-php artisan serve
+npm install
+npm run build
 ```
 
-### Front-end
+Or, if you prefer a single command for the portfolio/demo bootstrap:
 
 ```bash
-npm install
-npm run dev
+composer setup:demo
 ```
 
 ### Database
@@ -439,6 +498,12 @@ The search endpoint uses `ILIKE`, which is PostgreSQL-specific. If the goal is t
 ## Useful commands
 
 ```bash
+# Minimal application setup
+composer setup:app
+
+# Full demo bootstrap
+composer setup:demo
+
 # Run back-end tests
 php artisan test
 

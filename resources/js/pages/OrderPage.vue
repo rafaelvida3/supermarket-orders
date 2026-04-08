@@ -5,15 +5,27 @@
         {{ isViewMode ? 'Visualizar' : 'Novo' }} Pedido
       </h1>
 
-      <RouterLink :to="{ name: 'orders.list' }" class="w-full sm:w-auto flex justify-center sm:justify-end gap-2 items-center">
-        <button
-          class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 w-full sm:w-auto flex justify-center gap-2 items-center"
-          :disabled="saving"
-        >
-          <i class="pi pi-arrow-left"></i>
-          Voltar
-        </button>
-      </RouterLink>
+      <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
+        <RouterLink :to="{ name: 'stock.index' }" class="w-full sm:w-auto flex justify-center gap-2 items-center">
+          <button
+            class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 w-full sm:w-auto flex justify-center gap-2 items-center"
+            :disabled="saving"
+          >
+            <i class="pi pi-box"></i>
+            Estoque
+          </button>
+        </RouterLink>
+
+        <RouterLink :to="{ name: 'orders.list' }" class="w-full sm:w-auto flex justify-center sm:justify-end gap-2 items-center">
+          <button
+            class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 w-full sm:w-auto flex justify-center gap-2 items-center"
+            :disabled="saving"
+          >
+            <i class="pi pi-arrow-left"></i>
+            Voltar
+          </button>
+        </RouterLink>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">

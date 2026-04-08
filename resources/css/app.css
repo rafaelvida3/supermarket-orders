@@ -23,3 +23,7 @@
     /* Element starts or ends fully transparent */
     opacity: 0;
 }
+
+.p-tag-label {
+  white-space: nowrap;
+}

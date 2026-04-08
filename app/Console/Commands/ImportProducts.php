@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductsImport;
-use App\Models\Product;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Console command to import products from an Excel file into the database.
@@ -27,24 +27,33 @@ class ImportProducts extends Command
      *
      * @var string
      */
-    protected $description = 'Importar produtos da planilha pro banco de dados';
+    protected $description = 'Import products from the spreadsheet into the database';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
+        Excel::import(new ProductsImport(), $this->argument('file'));
+        $this->sync_products_sequence();
 
-        if (Product::query()->exists()) {
-            $this->info('Products already imported. Skipping.');
-            return self::SUCCESS;
+        $this->info('Products imported successfully. Existing rows were updated by id when needed.');
+
+        return self::SUCCESS;
+    }
+
+    private function sync_products_sequence(): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
         }
 
-        // Imports products from the given Excel file
-        Excel::import(new ProductsImport, $this->argument('file'));
-        
-        // Outputs a success message in the console
-        $this->info('Products imported successfully!');
-        return self::SUCCESS;
+        DB::statement(<<<'SQL'
+            SELECT setval(
+                pg_get_serial_sequence('products', 'id'),
+                COALESCE((SELECT MAX(id) FROM products), 1),
+                (SELECT EXISTS (SELECT 1 FROM products))
+            )
+        SQL);
     }
 }
