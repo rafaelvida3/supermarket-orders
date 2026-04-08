@@ -40,4 +40,4 @@ RUN mkdir -p database storage/framework/cache storage/framework/sessions storage
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan products:import && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan products:import && php artisan db:seed --class=OrderSeeder --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
