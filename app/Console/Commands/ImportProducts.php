@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductsImport;
+use App\Models\Product;
 
 /**
  * Console command to import products from an Excel file into the database.
@@ -33,6 +34,12 @@ class ImportProducts extends Command
      */
     public function handle(): int
     {
+
+        if (Product::query()->exists()) {
+            $this->info('Products already imported. Skipping.');
+            return self::SUCCESS;
+        }
+
         // Imports products from the given Excel file
         Excel::import(new ProductsImport, $this->argument('file'));
         

@@ -37,9 +37,7 @@ class ProductsImport implements ToModel, WithHeadingRow
             isset($row['qty_stock'])
         ) {
             // Create or update product based on its ID
-            return Product::updateOrCreate([
-                'id'        => (int) $row['id'] // Match existing record by ID
-            ], [
+            return Product::create([
                 'name'      => trim($row['name']),
                 'price'     => (float) $row['price'],
                 'qty_stock' => (int) $row['qty_stock'],

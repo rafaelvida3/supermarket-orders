@@ -42,10 +42,11 @@ services:
         echo "Running migrations..."
         php artisan migrate --force
 
-        if ! php artisan tinker --execute="exit(App\\Models\\Product::exists() ? 0 : 1);" >/dev/null 2>&1; then
-          echo "Importing products..."
-          php artisan products:import
-        fi
+        echo "Importing products..."
+        php artisan products:import
+
+        echo "Seeding orders..."
+        php artisan db:seed --class=OrderSeeder --force
 
         echo "Starting Laravel server..."
         php artisan serve --host=0.0.0.0 --port=8000
