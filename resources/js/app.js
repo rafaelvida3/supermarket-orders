@@ -23,11 +23,4 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.component("Toast", Toast);
 
-const toast = app.config.globalProperties.$toast;
-const originalAdd = toast.add;
-
-toast.add = (message) => {
-  originalAdd({ life: 2500, ...message });
-};
-
 app.mount("#app");

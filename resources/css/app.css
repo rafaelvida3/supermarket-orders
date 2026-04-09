@@ -10,17 +10,13 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-/* Transition configuration for fade effect */
 .fade-enter-active,
 .fade-leave-active {
-    /* Smooth transition for opacity when element enters or leaves */
     transition: opacity 0.5s ease;
 }
 
-/* Initial and final states of the fade animation */
 .fade-enter-from,
 .fade-leave-to {
-    /* Element starts or ends fully transparent */
     opacity: 0;
 }
 

@@ -5,41 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * Represents a customer order.
- *
- * Each order belongs to one customer and contains multiple order items.
- * Provides relationship access to its associated OrderItem models.
- */
 class Order extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'customer_name',
-        'delivery_date',
-        'total',
+        "customer_name",
+        "delivery_date",
+        "total",
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'delivery_date' => 'date',
-        'total' => 'decimal:2',
+        "delivery_date" => "date",
+        "total" => "decimal:2",
     ];
 
     /**
-     * Define the one-to-many relationship between Order and OrderItem.
-     *
      * @return HasMany<OrderItem>
      */
-    public function items(): HasMany {
+    public function items(): HasMany
+    {
         return $this->hasMany(OrderItem::class);
     }
 }

@@ -1,26 +1,18 @@
 <template>
-  <!-- Main responsive container -->
   <div
     class="max-w-5xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-900 shadow rounded-lg transition-colors duration-300"
   >
-    <!-- Header section -->
-    <div
-      class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-    >
-      <!-- Page title -->
-      <h1
-        class="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100"
-      >
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <h1 class="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100">
         Pedidos
       </h1>
 
-      <!-- Button to create a new order -->
       <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
         <RouterLink
           :to="{ name: 'stock.index' }"
           class="w-full sm:w-auto border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:text-blue-600 dark:hover:text-blue-400 transition flex justify-center gap-2 items-center"
         >
-          <i class="pi pi-box"></i>
+          <i class="pi pi-box" aria-hidden="true"></i>
           Ver Estoque
         </RouterLink>
 
@@ -28,13 +20,12 @@
           :to="{ name: 'orders.new' }"
           class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition flex justify-center sm:justify-between gap-2 items-center"
         >
-          <i class="pi pi-plus"></i>
+          <i class="pi pi-plus" aria-hidden="true"></i>
           Novo Pedido
         </RouterLink>
       </div>
     </div>
 
-    <!-- Mobile cards -->
     <div v-if="!loading && paginatedOrders.length > 0" class="md:hidden space-y-3">
       <article
         v-for="order in paginatedOrders"
@@ -84,15 +75,12 @@
           class="mt-4 w-full cursor-pointer border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 rounded px-3 py-2 transition flex items-center justify-center gap-2"
           @click="goToOrderDetails(order.id)"
         >
-          <i class="pi pi-eye"></i>
+          <i class="pi pi-eye" aria-hidden="true"></i>
           Ver pedido
         </button>
       </article>
 
-      <div
-        v-if="totalPages > 1"
-        class="flex items-center justify-between gap-3 pt-2"
-      >
+      <div v-if="totalPages > 1" class="flex items-center justify-between gap-3 pt-2">
         <button
           type="button"
           class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -117,9 +105,7 @@
       </div>
     </div>
 
-    <!-- Desktop table -->
     <div class="hidden md:block overflow-x-auto rounded-md border dark:border-gray-700">
-      <!-- Orders table -->
       <DataTable
         class="min-w-full text-sm sm:text-base dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700"
         :value="orders"
@@ -130,43 +116,35 @@
         sortField="created_at"
         :sortOrder="-1"
       >
-        <!-- Order date column -->
         <Column field="created_at" sortable>
           <template #header>
-            <span class="font-bold dark:text-gray-100 whitespace-nowrap"
-              >Data do Pedido</span
-            >
+            <span class="font-bold dark:text-gray-100 whitespace-nowrap">Data do Pedido</span>
           </template>
           <template #body="slotProps">
             {{ formatDate(slotProps.data.created_at, "DD/MM/YYYY HH:mm") }}
           </template>
         </Column>
 
-        <!-- Customer name column -->
         <Column field="customer_name" sortable>
           <template #header>
             <span class="font-bold dark:text-gray-100">Cliente</span>
           </template>
           <template #body="slotProps">
-            <span class="whitespace-nowrap sm:whitespace-normal break-words">{{
-              slotProps.data.customer_name
-            }}</span>
+            <span class="whitespace-nowrap sm:whitespace-normal break-words">
+              {{ slotProps.data.customer_name }}
+            </span>
           </template>
         </Column>
 
-        <!-- Delivery date column -->
         <Column field="delivery_date" sortable>
           <template #header>
-            <span class="font-bold dark:text-gray-100 whitespace-nowrap"
-              >Data de Entrega</span
-            >
+            <span class="font-bold dark:text-gray-100 whitespace-nowrap">Data de Entrega</span>
           </template>
           <template #body="slotProps">
             {{ formatDate(slotProps.data.delivery_date) }}
           </template>
         </Column>
 
-        <!-- Total amount column -->
         <Column field="total" sortable>
           <template #header>
             <span class="font-bold dark:text-gray-100">Total</span>
@@ -176,29 +154,25 @@
           </template>
         </Column>
 
-        <!-- Action column (view order details) -->
         <Column>
           <template #body="slotProps">
             <button
+              type="button"
               class="cursor-pointer text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+              :aria-label="`Ver pedido ${slotProps.data.id}`"
               @click="goToOrderDetails(slotProps.data.id)"
             >
-              <i class="pi pi-eye" title="Ver"></i>
+              <i class="pi pi-eye" aria-hidden="true"></i>
             </button>
           </template>
         </Column>
       </DataTable>
     </div>
 
-    <!-- Mobile loading state -->
-    <div
-      v-if="loading"
-      class="sm:hidden text-gray-500 dark:text-gray-400 text-center text-sm"
-    >
+    <div v-if="loading" class="sm:hidden text-gray-500 dark:text-gray-400 text-center text-sm">
       Carregando pedidos...
     </div>
 
-    <!-- Empty state message -->
     <div
       v-if="orders.length === 0 && !loading"
       class="text-gray-500 dark:text-gray-400 mt-4 text-center text-sm sm:text-base"
@@ -209,31 +183,25 @@
 </template>
 
 <script setup>
-/* ===== Imports ===== */
+import { useAppToast } from "@/composables/useAppToast";
 import { useLoadingOverlay } from "@/composables/useLoadingOverlay";
 import { formatDate, formatPrice } from "@/helpers";
 import { fetchOrders } from "@/services/orderService";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";
-import { useToast } from "primevue/usetoast";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
-const { showOverlay, hideOverlay } = useLoadingOverlay();
-
-/* ===== Setup ===== */
-const router = useRouter();
-const toast = useToast();
-
-/* ===== Constants ===== */
 const rowsPerPage = 10;
 
-/* Reactive state */
+const { showOverlay, hideOverlay } = useLoadingOverlay();
+const { addToast } = useAppToast();
+const router = useRouter();
+
 const orders = ref([]);
 const loading = ref(true);
 const currentPage = ref(1);
 
-/* ===== Computed values ===== */
 const totalPages = computed(() => {
   return Math.max(1, Math.ceil(orders.value.length / rowsPerPage));
 });
@@ -245,7 +213,6 @@ const paginatedOrders = computed(() => {
   return orders.value.slice(startIndex, endIndex);
 });
 
-/* ===== Helpers ===== */
 const goToOrderDetails = (orderId) => {
   router.push({
     name: "orders.view",
@@ -265,14 +232,12 @@ const goToNextPage = () => {
   }
 };
 
-/* ===== Watchers ===== */
 watch(totalPages, (newTotalPages) => {
   if (currentPage.value > newTotalPages) {
     currentPage.value = newTotalPages;
   }
 });
 
-/* ===== Lifecycle: on mount ===== */
 onMounted(async () => {
   try {
     showOverlay();
@@ -281,7 +246,7 @@ onMounted(async () => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erro inesperado ao carregar pedidos.";
 
-    toast.add({
+    addToast({
       severity: "error",
       summary: "Erro ao carregar pedidos",
       detail: errorMessage,

@@ -41,7 +41,7 @@ This repository was shaped to show how I approach business software when the goa
 ### Tooling
 
 - Docker Compose for local development
-- GitHub Actions for PHP lint, Laravel tests, front-end tests, and build validation
+- GitHub Actions for PHP lint, Laravel tests, Pint style checks, front-end tests, and build validation
 
 ## Core flow
 
@@ -144,6 +144,7 @@ resources/js/
 │   └── orders/OrderItemsSection.vue
 ├── composables/
 │   ├── orderFormUtils.js
+│   ├── useAppToast.js
 │   ├── useLoadingOverlay.js
 │   └── useOrderForm.js
 ├── pages/

@@ -3,6 +3,8 @@ import {
   calculateItemSubtotal,
   createDefaultItem,
   mapOrderItemsToFormItems,
+  normalizeDeliveryDate,
+  parseDeliveryDateFromApi,
 } from "@/composables/orderFormUtils";
 import { describe, expect, it } from "vitest";
 
@@ -24,13 +26,27 @@ describe("orderFormUtils", () => {
     expect(calculateItemSubtotal({ subtotal: "21.00" }, true)).toBe(21);
   });
 
+  it("normalizes a date object before sending the payload", () => {
+    expect(normalizeDeliveryDate(new Date(2026, 3, 10))).toBe("2026-04-10");
+  });
+
+  it("parses an API date into a local date object", () => {
+    const deliveryDate = parseDeliveryDateFromApi("2026-04-10");
+
+    expect(deliveryDate).toBeInstanceOf(Date);
+    expect(deliveryDate.getFullYear()).toBe(2026);
+    expect(deliveryDate.getMonth()).toBe(3);
+    expect(deliveryDate.getDate()).toBe(10);
+  });
+
   it("builds the API payload with selected products only", () => {
     expect(
       buildOrderPayload({
-        customerName: "Rafael",
-        deliveryDate: "2026-04-10",
+        customerName: " Rafael ",
+        deliveryDate: new Date(2026, 3, 10),
         items: [
           {
+            product_id: 1,
             qty: 2,
             product: { id: 1, name: "Rice" },
           },

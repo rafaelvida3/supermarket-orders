@@ -106,16 +106,19 @@
               <Message v-if="!isViewMode" size="small" variant="simple" class="mt-2">&nbsp;</Message>
             </td>
 
-            <td
-              v-if="!isViewMode"
-              class="px-6 py-2 text-center"
-              :class="item.product_id !== null ? 'cursor-pointer' : ''"
-              :title="item.product_id !== null ? 'Excluir' : ''"
-              @click="item.product_id !== null && emit('remove-item', index)"
-            >
-              <Transition name="fade">
-                <i v-if="item.product_id !== null" class="pi pi-times text-red-500 dark:text-red-400"></i>
-              </Transition>
+            <td v-if="!isViewMode" class="px-6 py-2 text-center">
+              <button
+                v-if="item.product_id !== null"
+                type="button"
+                class="cursor-pointer text-red-500 dark:text-red-400"
+                title="Excluir"
+                aria-label="Excluir item"
+                @click="emit('remove-item', index)"
+              >
+                <Transition name="fade">
+                  <i class="pi pi-times" aria-hidden="true"></i>
+                </Transition>
+              </button>
               <Message size="small" variant="simple" class="mt-2">&nbsp;</Message>
             </td>
           </tr>
@@ -143,7 +146,7 @@
             aria-label="Remover item"
             @click="emit('remove-item', index)"
           >
-            <i class="pi pi-times"></i>
+            <i class="pi pi-times" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -262,15 +265,15 @@
 </template>
 
 <script setup>
-import { formatPrice } from '@/helpers';
-import AutoComplete from 'primevue/autocomplete';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import InputNumber from 'primevue/inputnumber';
-import Message from 'primevue/message';
-import { useToast } from 'primevue/usetoast';
+import { useAppToast } from "@/composables/useAppToast";
+import { formatPrice } from "@/helpers";
+import AutoComplete from "primevue/autocomplete";
+import IconField from "primevue/iconfield";
+import InputIcon from "primevue/inputicon";
+import InputNumber from "primevue/inputnumber";
+import Message from "primevue/message";
 
-const props = defineProps({
+defineProps({
   acKeys: {
     type: Array,
     required: true,
@@ -317,32 +320,27 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits([
-  'add-item',
-  'complete-product',
-  'remove-item',
-  'select-product',
-]);
+const emit = defineEmits(["add-item", "complete-product", "remove-item", "select-product"]);
 
-const toast = useToast();
+const { addToast } = useAppToast();
 
 const handleStockLimitClick = (event, item) => {
-    const wrapper = event.currentTarget?.querySelector('.p-inputnumber');
+  const wrapper = event.currentTarget?.querySelector(".p-inputnumber");
 
-    if (!wrapper) {
-        return;
-    }
+  if (!wrapper) {
+    return;
+  }
 
-    const plusButton = wrapper.querySelector('.p-inputnumber-increment-button');
-    const qty = Number(item?.qty) || 0;
-    const qtyStock = Number(item?.product?.qty_stock) || 0;
+  const plusButton = wrapper.querySelector(".p-inputnumber-increment-button");
+  const qty = Number(item?.qty) || 0;
+  const qtyStock = Number(item?.product?.qty_stock) || 0;
 
-    if (plusButton && plusButton.classList.contains('p-disabled') && qty >= qtyStock) {
-        toast.add({
-            severity: 'warn',
-            summary: 'Estoque máximo atingido',
-            detail: `Disponível: ${qtyStock} unidade${qtyStock > 1 ? 's' : ''}.`,
-        });
-    }
+  if (plusButton && plusButton.classList.contains("p-disabled") && qty >= qtyStock) {
+    addToast({
+      severity: "warn",
+      summary: "Estoque máximo atingido",
+      detail: `Disponível: ${qtyStock} unidade${qtyStock > 1 ? "s" : ""}.`,
+    });
+  }
 };
 </script>

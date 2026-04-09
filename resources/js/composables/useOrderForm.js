@@ -3,12 +3,12 @@ import {
   calculateItemSubtotal,
   createDefaultItem,
   mapOrderItemsToFormItems,
+  parseDeliveryDateFromApi,
 } from "@/composables/orderFormUtils";
+import { useAppToast } from "@/composables/useAppToast";
 import { useLoadingOverlay } from "@/composables/useLoadingOverlay";
-import { formatDate } from "@/helpers";
 import { createOrder, getOrderById } from "@/services/orderService";
 import { fetchProducts } from "@/services/productService";
-import { useToast } from "primevue/usetoast";
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -17,7 +17,7 @@ const { showOverlay, hideOverlay } = useLoadingOverlay();
 export const useOrderForm = () => {
   const router = useRouter();
   const route = useRoute();
-  const toast = useToast();
+  const { addToast } = useAppToast();
 
   const isViewMode = ref(false);
   const orderId = ref(null);
@@ -49,6 +49,30 @@ export const useOrderForm = () => {
   const hasInvalidQuantity = computed(() => {
     return items.value.some((item) => item.product_id && Number(item.qty) <= 0);
   });
+
+  const initializeItemCollections = (length) => {
+    productSuggestions.value = Array.from({ length }, () => []);
+    acKeys.value = Array.from({ length }, () => 0);
+  };
+
+  const isOrderSubmissionInvalid = () => {
+    return (
+      !customerName.value.trim() ||
+      !deliveryDate.value ||
+      noProductSelected.value ||
+      hasInvalidQuantity.value
+    );
+  };
+
+  const getStockExceededMessage = (productName, availableStock) => {
+    return `O produto "${productName}" já foi adicionado e possui apenas ${availableStock} unidade${
+      availableStock > 1 ? "s" : ""
+    } em estoque.`;
+  };
+
+  const getOrderValidationMessage = (error) => {
+    return error.response?.data?.errors?.items?.[0] || "Erro de validação.";
+  };
 
   const addItem = () => {
     items.value.push(createDefaultItem());
@@ -97,7 +121,7 @@ export const useOrderForm = () => {
     } catch {
       productSuggestions.value[index] = [];
 
-      toast.add({
+      addToast({
         severity: "error",
         summary: "Erro ao buscar produtos",
         detail: "Não foi possível carregar as sugestões.",
@@ -122,13 +146,14 @@ export const useOrderForm = () => {
     const availableStock = Number(selectedProduct.qty_stock);
 
     if (nextQty > availableStock) {
-      toast.add({
+      addToast({
         severity: "warn",
         summary: "Estoque máximo atingido",
-        detail: `O produto "${selectedProduct.name}" já foi adicionado e possui apenas ${availableStock} unidade${availableStock > 1 ? "s" : ""} em estoque.`,
+        detail: getStockExceededMessage(selectedProduct.name, availableStock),
       });
 
       resetItemSelection(index);
+
       return true;
     }
 
@@ -139,7 +164,7 @@ export const useOrderForm = () => {
 
     removeItem(index);
 
-    toast.add({
+    addToast({
       severity: "info",
       summary: "Produto atualizado",
       detail: `A quantidade de "${selectedProduct.name}" foi somada no item existente.`,
@@ -156,13 +181,14 @@ export const useOrderForm = () => {
     }
 
     if (selectedProduct.qty_stock === 0) {
-      toast.add({
+      addToast({
         severity: "warn",
         summary: "Estoque indisponível",
         detail: `O produto "${selectedProduct.name}" está sem estoque.`,
       });
 
       resetItemSelection(index);
+
       return;
     }
 
@@ -180,7 +206,7 @@ export const useOrderForm = () => {
   const saveOrder = async () => {
     submitted.value = true;
 
-    if (!customerName.value || !deliveryDate.value || noProductSelected.value || hasInvalidQuantity.value) {
+    if (isOrderSubmissionInvalid()) {
       return;
     }
 
@@ -195,23 +221,21 @@ export const useOrderForm = () => {
         })
       );
 
-      toast.add({
+      addToast({
         severity: "success",
         summary: "Pedido salvo com sucesso",
       });
 
-      router.push({ name: "orders.list" }).catch(() => {});
+      await router.push({ name: "orders.list" });
     } catch (error) {
       if (error.response?.status === 422) {
-        const message = error.response.data.errors?.items?.[0] || "Erro de validação.";
-
-        toast.add({
+        addToast({
           severity: "warn",
           summary: "Estoque insuficiente",
-          detail: message,
+          detail: getOrderValidationMessage(error),
         });
       } else {
-        toast.add({
+        addToast({
           severity: "error",
           summary: "Erro ao salvar pedido",
           detail: "Ocorreu um erro inesperado.",
@@ -236,15 +260,16 @@ export const useOrderForm = () => {
       const data = await getOrderById(orderId.value);
 
       customerName.value = data.customer_name;
-      deliveryDate.value = formatDate(data.delivery_date);
+      deliveryDate.value = parseDeliveryDateFromApi(data.delivery_date);
       items.value = mapOrderItemsToFormItems(data.items);
-      productSuggestions.value = data.items.map(() => []);
-      acKeys.value = data.items.map(() => 0);
+      initializeItemCollections(data.items.length);
     } catch (error) {
-      toast.add({
+      const errorMessage = error instanceof Error ? error.message : "Erro inesperado ao carregar pedido.";
+
+      addToast({
         severity: "error",
         summary: "Erro ao carregar pedido",
-        detail: error.message,
+        detail: errorMessage,
       });
     } finally {
       hideOverlay();

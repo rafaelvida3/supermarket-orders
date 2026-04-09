@@ -12,7 +12,7 @@
         :to="{ name: 'orders.list' }"
         class="w-full sm:w-auto bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition flex justify-center gap-2 items-center"
       >
-        <i class="pi pi-arrow-left"></i>
+        <i class="pi pi-arrow-left" aria-hidden="true"></i>
         Voltar para pedidos
       </RouterLink>
     </div>
@@ -115,10 +115,7 @@
       </DataTable>
     </div>
 
-    <div
-      v-if="loading"
-      class="sm:hidden text-gray-500 dark:text-gray-400 text-center text-sm"
-    >
+    <div v-if="loading" class="sm:hidden text-gray-500 dark:text-gray-400 text-center text-sm">
       Carregando estoque...
     </div>
 
@@ -132,19 +129,19 @@
 </template>
 
 <script setup>
+import { useAppToast } from "@/composables/useAppToast";
 import { useLoadingOverlay } from "@/composables/useLoadingOverlay";
 import { formatPrice } from "@/helpers";
 import { fetchStockProducts } from "@/services/productService";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";
 import Tag from "primevue/tag";
-import { useToast } from "primevue/usetoast";
 import { computed, onMounted, ref } from "vue";
 
 const lowStockThreshold = 5;
 
 const { hideOverlay, showOverlay } = useLoadingOverlay();
-const toast = useToast();
+const { addToast } = useAppToast();
 
 const loading = ref(true);
 const products = ref([]);
@@ -154,6 +151,7 @@ const summary = computed(() => {
   const outOfStockProducts = products.value.filter((product) => Number(product.qty_stock) === 0).length;
   const lowStockProducts = products.value.filter((product) => {
     const stock = Number(product.qty_stock);
+
     return stock > 0 && stock <= lowStockThreshold;
   }).length;
 
@@ -200,7 +198,7 @@ onMounted(async () => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Erro inesperado ao carregar estoque.";
 
-    toast.add({
+    addToast({
       severity: "error",
       summary: "Erro ao carregar estoque",
       detail: errorMessage,

@@ -28,7 +28,7 @@ services:
     command: >
       sh -c '
         set -e
-        npm install
+        npm ci
         echo "Starting Vite dev server..."
         npm run dev -- --host 0.0.0.0 --port 5173
       '
