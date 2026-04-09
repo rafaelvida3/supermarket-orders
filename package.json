@@ -1,29 +1,38 @@
 {
-  "$schema": "https://json.schemastore.org/package.json",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "test:front": "vitest run",
-    "test:front:watch": "vitest"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.0.0",
-    "@vitejs/plugin-vue": "^6.0.1",
-    "axios": "^1.13.1",
-    "concurrently": "^9.0.1",
-    "laravel-vite-plugin": "^2.0.0",
-    "tailwindcss": "^4.1.16",
-    "vite": "^7.0.7",
-    "vitest": "^4.1.3"
-  },
-  "dependencies": {
-    "@primeuix/themes": "^2.0.3",
-    "dayjs": "^1.11.18",
-    "primeicons": "^7.0.0",
-    "primevue": "^4.4.1",
-    "vue": "^3.5.22",
-    "vue-router": "^4.6.3"
-  }
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "test:front": "vitest run",
+        "test:front:watch": "vitest",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier . --write",
+        "format:check": "prettier . --check"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@tailwindcss/vite": "^4.0.0",
+        "@vitejs/plugin-vue": "^6.0.1",
+        "axios": "^1.13.1",
+        "concurrently": "^9.0.1",
+        "eslint": "^10.2.0",
+        "eslint-plugin-vue": "^10.8.0",
+        "globals": "^17.4.0",
+        "laravel-vite-plugin": "^2.0.0",
+        "prettier": "^3.8.1",
+        "tailwindcss": "^4.1.16",
+        "vite": "^7.0.7",
+        "vitest": "^4.1.3"
+    },
+    "dependencies": {
+        "@primeuix/themes": "^2.0.3",
+        "dayjs": "^1.11.18",
+        "primeicons": "^7.0.0",
+        "primevue": "^4.4.1",
+        "vue": "^3.5.22",
+        "vue-router": "^4.6.3"
+    }
 }

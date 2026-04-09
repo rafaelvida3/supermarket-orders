@@ -180,14 +180,14 @@ Response:
 
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "name": "Rice",
-      "price": "10.50",
-      "qty_stock": 20
-    }
-  ]
+    "data": [
+        {
+            "id": 1,
+            "name": "Rice",
+            "price": "10.50",
+            "qty_stock": 20
+        }
+    ]
 }
 ```
 
@@ -211,12 +211,12 @@ Payload:
 
 ```json
 {
-  "customer_name": "Rafael",
-  "delivery_date": "2026-04-10",
-  "items": [
-    { "product_id": 1, "qty": 2 },
-    { "product_id": 5, "qty": 1 }
-  ]
+    "customer_name": "Rafael",
+    "delivery_date": "2026-04-10",
+    "items": [
+        { "product_id": 1, "qty": 2 },
+        { "product_id": 5, "qty": 1 }
+    ]
 }
 ```
 
@@ -224,11 +224,11 @@ Success response:
 
 ```json
 {
-  "data": {
-    "id": 1,
-    "total": "28.00"
-  },
-  "message": "Pedido criado com sucesso."
+    "data": {
+        "id": 1,
+        "total": "28.00"
+    },
+    "message": "Pedido criado com sucesso."
 }
 ```
 

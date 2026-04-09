@@ -1,18 +1,15 @@
-import path from 'path';
-import { defineConfig } from 'vitest/config';
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, 'resources/js'),
+            "@": fileURLToPath(new URL("./resources/js", import.meta.url)),
         },
     },
     test: {
-        environment: 'node',
-        include: [
-            'resources/js/**/*.test.js',
-            'resources/js/**/__tests__/**/*.js',
-        ],
+        environment: "node",
+        include: ["resources/js/**/*.test.js", "resources/js/**/__tests__/**/*.js"],
         clearMocks: true,
     },
 });

@@ -12,13 +12,13 @@ const app = createApp(App);
 
 app.use(router);
 app.use(PrimeVue, {
-  theme: {
-    preset: Lara,
-  },
-  locale: {
-    emptySearchMessage: "Nenhum produto encontrado",
-    emptyMessage: "",
-  },
+    theme: {
+        preset: Lara,
+    },
+    locale: {
+        emptySearchMessage: "Nenhum produto encontrado",
+        emptyMessage: "",
+    },
 });
 app.use(ToastService);
 app.component("Toast", Toast);

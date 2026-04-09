@@ -8,23 +8,23 @@ dayjs.extend(timezone);
 dayjs.locale("pt-br");
 
 export const formatPrice = (value) => {
-  if (value === null || value === undefined || value === "") {
-    return "R$ 0,00";
-  }
+    if (value === null || value === undefined || value === "") {
+        return "R$ 0,00";
+    }
 
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-  }).format(Number(value));
+    return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+    }).format(Number(value));
 };
 
 export const formatDate = (value, pattern = "DD/MM/YYYY") => {
-  if (!value) {
-    return "-";
-  }
+    if (!value) {
+        return "-";
+    }
 
-  const date = dayjs(value);
+    const date = dayjs(value);
 
-  return date.isValid() ? date.format(pattern) : "-";
+    return date.isValid() ? date.format(pattern) : "-";
 };
