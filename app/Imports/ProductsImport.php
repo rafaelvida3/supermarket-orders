@@ -8,24 +8,24 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithUpsertColumns;
 use Maatwebsite\Excel\Concerns\WithUpserts;
 
-class ProductsImport implements ToModel, WithHeadingRow, WithUpserts, WithUpsertColumns
+class ProductsImport implements ToModel, WithHeadingRow, WithUpsertColumns, WithUpserts
 {
     /**
-     * @param array<string, mixed> $row
+     * @param  array<string, mixed>  $row
      */
     public function model(array $row): ?Product
     {
         if (
-            ! empty($row["id"]) &&
-            ! empty($row["name"]) &&
-            isset($row["price"]) &&
-            isset($row["qty_stock"])
+            ! empty($row['id']) &&
+            ! empty($row['name']) &&
+            isset($row['price']) &&
+            isset($row['qty_stock'])
         ) {
             return new Product([
-                "id" => (int) $row["id"],
-                "name" => trim($row["name"]),
-                "price" => (float) $row["price"],
-                "qty_stock" => (int) $row["qty_stock"],
+                'id' => (int) $row['id'],
+                'name' => trim($row['name']),
+                'price' => (float) $row['price'],
+                'qty_stock' => (int) $row['qty_stock'],
             ]);
         }
 
@@ -34,7 +34,7 @@ class ProductsImport implements ToModel, WithHeadingRow, WithUpserts, WithUpsert
 
     public function uniqueBy(): string
     {
-        return "id";
+        return 'id';
     }
 
     /**
@@ -43,9 +43,9 @@ class ProductsImport implements ToModel, WithHeadingRow, WithUpserts, WithUpsert
     public function upsertColumns(): array
     {
         return [
-            "name",
-            "price",
-            "qty_stock",
+            'name',
+            'price',
+            'qty_stock',
         ];
     }
 }

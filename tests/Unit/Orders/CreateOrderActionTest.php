@@ -4,11 +4,10 @@ namespace Tests\Unit\Orders;
 
 use App\Actions\Orders\CreateOrderAction;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Validation\ValidationException;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class CreateOrderActionTest extends TestCase
@@ -25,7 +24,7 @@ class CreateOrderActionTest extends TestCase
             'qty_stock' => 10,
         ]);
 
-        $create_order_action = new CreateOrderAction();
+        $create_order_action = new CreateOrderAction;
 
         $result = $create_order_action->execute([
             'customer_name' => 'Rafael',
@@ -75,7 +74,7 @@ class CreateOrderActionTest extends TestCase
             'qty_stock' => 3,
         ]);
 
-        $create_order_action = new CreateOrderAction();
+        $create_order_action = new CreateOrderAction;
 
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('estoque insuficiente');

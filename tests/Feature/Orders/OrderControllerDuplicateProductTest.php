@@ -9,11 +9,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class OrderControllerDuplicateProductTest extends TestCase {
+class OrderControllerDuplicateProductTest extends TestCase
+{
     use RefreshDatabase;
 
     #[Test]
-    public function test_it_merges_duplicate_products_in_the_same_order(): void {
+    public function test_it_merges_duplicate_products_in_the_same_order(): void
+    {
         $product = Product::query()->create([
             'name' => 'Rice',
             'price' => 10.50,

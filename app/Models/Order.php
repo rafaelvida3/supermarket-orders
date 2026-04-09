@@ -8,14 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Order extends Model
 {
     protected $fillable = [
-        "customer_name",
-        "delivery_date",
-        "total",
+        'customer_name',
+        'delivery_date',
+        'total',
     ];
 
     protected $casts = [
-        "delivery_date" => "date",
-        "total" => "decimal:2",
+        'delivery_date' => 'date',
+        'total' => 'decimal:2',
     ];
 
     /**

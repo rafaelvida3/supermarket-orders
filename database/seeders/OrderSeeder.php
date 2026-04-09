@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Actions\Orders\CreateOrderAction;
-use Illuminate\Database\Seeder;
 use App\Models\Order;
+use Illuminate\Database\Seeder;
 
 class OrderSeeder extends Seeder
 {
@@ -15,7 +15,7 @@ class OrderSeeder extends Seeder
 
             return;
         }
-        
+
         /** @var CreateOrderAction $create_order_action */
         $create_order_action = app(CreateOrderAction::class);
 

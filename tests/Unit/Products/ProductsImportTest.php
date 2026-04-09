@@ -12,7 +12,7 @@ class ProductsImportTest extends TestCase
     #[Test]
     public function test_it_returns_a_product_instance_from_a_valid_row(): void
     {
-        $import = new ProductsImport();
+        $import = new ProductsImport;
 
         $result = $import->model([
             'id' => 1,
@@ -31,7 +31,7 @@ class ProductsImportTest extends TestCase
     #[Test]
     public function test_it_trims_the_product_name_from_a_valid_row(): void
     {
-        $import = new ProductsImport();
+        $import = new ProductsImport;
 
         $result = $import->model([
             'id' => 2,
@@ -47,7 +47,7 @@ class ProductsImportTest extends TestCase
     #[Test]
     public function test_it_returns_null_for_rows_with_missing_required_fields(): void
     {
-        $import = new ProductsImport();
+        $import = new ProductsImport;
 
         $result = $import->model([
             'id' => 1,

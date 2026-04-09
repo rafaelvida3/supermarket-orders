@@ -14,21 +14,21 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "customer_name" => ["required", "string", "max:120"],
-            "delivery_date" => ["required", "date", "after_or_equal:today"],
-            "items" => ["required", "array", "min:1"],
-            "items.*.product_id" => ["required", "integer", "exists:products,id"],
-            "items.*.qty" => ["required", "integer", "min:1"],
+            'customer_name' => ['required', 'string', 'max:120'],
+            'delivery_date' => ['required', 'date', 'after_or_equal:today'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.qty' => ['required', 'integer', 'min:1'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            "items.required" => "Selecione pelo menos um produto.",
-            "items.min" => "Selecione pelo menos um produto.",
-            "items.*.product_id.exists" => "Um ou mais produtos selecionados não existem mais.",
-            "items.*.qty.min" => "A quantidade mínima por item é 1.",
+            'items.required' => 'Selecione pelo menos um produto.',
+            'items.min' => 'Selecione pelo menos um produto.',
+            'items.*.product_id.exists' => 'Um ou mais produtos selecionados não existem mais.',
+            'items.*.qty.min' => 'A quantidade mínima por item é 1.',
         ];
     }
 }
