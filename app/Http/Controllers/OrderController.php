@@ -7,16 +7,8 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Controller responsible for managing orders.
- */
 class OrderController extends Controller
 {
-    /**
-     * Retrieve a list of all orders.
-     *
-     * @return JsonResponse JSON response with the orders list.
-     */
     public function index(): JsonResponse
     {
         $orders = Order::query()
@@ -30,13 +22,6 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * Create a new order.
-     *
-     * @param StoreOrderRequest $request Validated order request.
-     * @param CreateOrderAction $create_order_action Action responsible for order creation.
-     * @return JsonResponse JSON response with created order metadata.
-     */
     public function store(StoreOrderRequest $request, CreateOrderAction $create_order_action): JsonResponse
     {
         $order_data = $create_order_action->execute($request->validated());
@@ -50,12 +35,6 @@ class OrderController extends Controller
         ], 201);
     }
 
-    /**
-     * Retrieve a single order with its items and products.
-     *
-     * @param int $id Order ID.
-     * @return JsonResponse JSON response with order details or 404 if not found.
-     */
     public function show(int $id): JsonResponse
     {
         $order = Order::query()

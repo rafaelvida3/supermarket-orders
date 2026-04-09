@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "rafaelvc/supermarket-orders",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Portfolio-ready supermarket order management application built with Laravel, Vue, and PostgreSQL.",
     "keywords": [
         "laravel",
         "framework"
@@ -49,7 +49,7 @@
             "@php artisan migrate --force",
             "@php artisan products:import",
             "@php artisan db:seed --class=OrderSeeder --force",
-            "npm install",
+            "npm ci",
             "npm run build"
         ],
         "dev": [

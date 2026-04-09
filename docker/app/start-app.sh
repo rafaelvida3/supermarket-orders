@@ -17,8 +17,12 @@ if [ ! -f .env ]; then
   cp .env.example .env
 fi
 
-echo "Running composer install..."
-composer install --no-interaction --prefer-dist
+if [ ! -f vendor/autoload.php ]; then
+  echo "Installing Composer dependencies..."
+  composer install --no-interaction --prefer-dist
+else
+  echo "Composer dependencies already installed."
+fi
 
 if ! grep -q "^APP_KEY=" .env || [ -z "$(grep "^APP_KEY=" .env | cut -d "=" -f2)" ]; then
   echo "Generating APP_KEY..."

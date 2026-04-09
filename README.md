@@ -1,309 +1,209 @@
 # Supermarket Orders
 
-A full-stack supermarket order management application built with **Laravel 12**, **Vue 3**, and **PostgreSQL**.
+A portfolio-ready supermarket order management application built with Laravel 12, Vue 3, and PostgreSQL.
 
-This project started as a technical challenge and was later refined into a portfolio case study focused on **separation of responsibilities**, **stock integrity**, **sound modeling decisions**, and **clear architecture**.
+It started as a technical challenge and was then refined into a small case study focused on code clarity, stock integrity, pragmatic architecture, and maintainable front-end structure.
 
-**Live demo:** https://supermarket-orders.onrender.com/
+Live demo: https://supermarket-orders.onrender.com/
 
-## Overview
+## Why this project matters
 
-The application covers the core order flow end to end:
+This repository was shaped to show how I approach business software when the goal is not just to "make it work", but to keep the code predictable and safe:
 
-- initial catalog import from an `.xlsx` spreadsheet
-- product search with autocomplete
-- dynamic order building with multiple items
-- per-item subtotal and order total calculation
-- stock validation on the front end and, most importantly, on the back end
-- order and order item persistence
-- stock deduction at confirmation time
-- listing previously created orders
-- detailed view of a saved order
-- dedicated stock page with current quantity and low-stock visibility
+- controllers stay thin and delegate the main use case to an action
+- order creation runs inside a database transaction
+- stock is validated on the server, not trusted to the UI
+- duplicated products are consolidated before persistence
+- historical prices are preserved in `order_items`
+- database constraints reinforce invariants beyond the application layer
+- the front end is organized around the order flow without adding unnecessary state management
 
-More than simply "working", the project was organized to make it explicit **where each rule lives** and **how the domain is protected when concurrency and inconsistent input are involved**.
-
----
-
-## What this project demonstrates
-
-This repository was structured to highlight a few points I consider essential in business software:
-
-- **Lean controllers**: the critical order creation orchestration is not scattered across the controller.
-- **Server-side domain protection**: the front end improves UX, but the source of truth remains on the back end.
-- **Consistent persistence**: order creation and stock deduction happen inside a **transaction**.
-- **Concurrency handled carefully**: order products are loaded with `lockForUpdate()` before stock is decremented.
-- **Modeling with preserved history**: `order_items` stores `unit_price` and `subtotal`, avoiding reliance on the current catalog price to reconstruct past orders.
-- **Defense in depth**: the front end tries to avoid duplicate selection, but the back end also consolidates repeated products before saving.
-- **Controlled scope**: no overengineering. The project uses abstractions only where they genuinely improve maintainability.
-
----
-
-## Architecture
+## Main stack
 
 ### Back-end
 
-- **Laravel 12** as a REST API
-- **PostgreSQL** as the primary database
-- **Maatwebsite Excel** for product spreadsheet import
-- **CreateOrderAction** to encapsulate the most important use case in the system
-- **Form Request** for input validation
-- **Eloquent** for modeling and persistence
+- Laravel 12
+- PostgreSQL
+- Eloquent ORM
+- Form Requests for validation
+- Maatwebsite Excel for catalog import
 
 ### Front-end
 
-- **Vue 3** with the Composition API
-- **Vite** as the bundler
-- **Vue Router** for SPA navigation
-- **PrimeVue** for UI components
-- **Inventory page** focused on operational visibility
-- **Tailwind CSS** for layout and responsiveness
-- **Axios** for API consumption
-- **Vitest** for front-end unit tests
+- Vue 3 with the Composition API
+- Vite
+- Vue Router
+- PrimeVue
+- Tailwind CSS
+- Axios
+- Vitest
 
-### Infrastructure
+### Tooling
 
-- **Docker Compose** for local development with three services:
-  - `app` (Laravel / PHP)
-  - `frontend` (Vite / Vue)
-  - `postgres` (PostgreSQL 18)
-- **Separated bootstrap modes**:
-  - `docker/app/start-app.sh` starts the application container
-  - `docker/app/setup-demo.sh` prepares demo data only when explicitly requested
-- **Multi-stage Dockerfile** for local usage and for a build/deploy flow closer to production, with a production command that starts only the application process
+- Docker Compose for local development
+- GitHub Actions for PHP lint, Laravel tests, front-end tests, and build validation
 
----
+## Core flow
 
-## Main business flow
+### 1. Catalog import
 
-### 1. Initial catalog
+The catalog is loaded from `storage/app/Products.xlsx` with `php artisan products:import`.
 
-The catalog is loaded from `storage/app/Products.xlsx`.
+The import is designed to be safe to rerun:
 
-The `php artisan products:import` command:
+- valid rows are mapped to `Product`
+- incomplete rows are ignored
+- existing rows are updated through upsert behavior
+- the PostgreSQL sequence is resynchronized after import
 
-- reads the spreadsheet through `ProductsImport`
-- validates the presence of required columns for each row
-- creates products in the database
-- safely reruns through an id-based upsert, updating existing rows when the spreadsheet changes
-- resynchronizes the PostgreSQL sequence after import so future inserts keep working correctly
+### 2. Order creation
 
-The spreadsheet included in the repository contains **50 valid products** ready for import, and the command is idempotent enough to be rerun safely during local setup or demo resets.
-
-### 2. Order building
-
-On the front end, the user provides:
+The user fills:
 
 - customer name
 - delivery date
-- list of products and quantities
+- one or more products with quantity
 
-Order building is centralized in the `useOrderForm` composable, which handles:
+The front end handles autocomplete, subtotal display, total calculation, duplicate item merging, and payload assembly.
 
-- form state
-- product autocomplete
-- duplicate item merging in the interface
-- total calculation
-- payload assembly for the API
-- order loading in view mode
+### 3. Stock-safe persistence
 
-### 3. Safe order creation
+`CreateOrderAction` is responsible for the critical flow:
 
-Order creation is executed in `CreateOrderAction`.
+1. aggregate duplicated products
+2. start a transaction
+3. lock products with `lockForUpdate()`
+4. validate existence and stock
+5. create the order
+6. create `order_items` with a price snapshot
+7. decrement stock
+8. persist the final total
 
-This flow does the following:
-
-1. consolidates repeated products in the payload
-2. opens a database transaction
-3. loads products with `lockForUpdate()`
-4. validates existence and stock availability
-5. creates the order with an initial zero total
-6. creates `order_items` with a unit price snapshot
-7. deducts stock from each product
-8. updates the final order total
-
-This design avoids two common problems:
-
-- **partially saved orders**
-- **inconsistent stock deductions in concurrent scenarios**
-
----
+This avoids partially saved orders and keeps stock consistent under concurrent writes.
 
 ## Modeling decisions
 
-### Main tables
+### `products`
 
-#### `products`
-Product catalog and current stock.
+Stores the catalog and the current stock.
 
 Relevant fields:
+
 - `id`
 - `name`
 - `price`
 - `qty_stock`
 
-#### `orders`
-Order header.
+### `orders`
+
+Stores the order header.
 
 Relevant fields:
+
 - `id`
 - `customer_name`
 - `delivery_date`
 - `total`
 
-#### `order_items`
-Order items.
+### `order_items`
+
+Stores each purchased product.
 
 Relevant fields:
+
 - `order_id`
 - `product_id`
 - `qty`
 - `unit_price`
 - `subtotal`
 
-### Why store `unit_price` and `subtotal`?
+### Why `unit_price` and `subtotal` are stored
 
-Because an order is a historical record. If the catalog price changes tomorrow, yesterday's order must remain intact.
+Orders are historical records. If a catalog price changes later, past orders must still reflect the original value.
 
-### Why have `unique(order_id, product_id)`?
+### Why `unique(order_id, product_id)` matters
 
-Because the same product should not exist more than once inside the same saved order. This also forces the system to preserve model consistency at the database level, not only in the UI.
-
----
-
-## Implementation decisions
-
-### Lean controller + dedicated action
-
-Order creation was extracted to `app/Actions/Orders/CreateOrderAction.php`.
-
-This reduces controller coupling and makes the critical rule easier to:
-
-- test
-- evolve
-- reuse
-- audit
-
-### Front-end composable instead of a global store
-
-The form state was centralized in `useOrderForm.js`.
-
-For this scope, using Pinia or Vuex would be unnecessary. The composable solves the problem well with less complexity.
-
-### Global overlay without a state library
-
-Shared loading was implemented with `useLoadingOverlay`, using reactive state at module scope. It is simple, readable, and sufficient for the current need.
-
-### Responsiveness handled with specific layouts
-
-`OrderItemsSection.vue` has a dedicated structure for desktop and mobile.
-
-There is some markup duplication, but it was a conscious trade-off to preserve interaction clarity in each context, especially when filling products and quantities on smaller screens.
-
-### Product search guided by UX
-
-The `GET /api/products` endpoint:
-
-- accepts the `q` parameter
-- uses `ILIKE` for case-insensitive search in PostgreSQL
-- limits the response to 10 items
-
-This limit prevents noisy autocomplete behavior and reduces unnecessary rendering cost.
-
-### Dedicated stock page
-
-The inventory view is intentionally separate from autocomplete.
-
-Instead of overloading the search endpoint, the application exposes `GET /api/products/stock` to return the full catalog for a dedicated `/estoque` screen. This keeps each endpoint aligned with a single responsibility:
-
-- `GET /api/products` serves autocomplete and quick search
-- `GET /api/products/stock` serves operational inventory visibility
-
-On the front end, the stock page highlights:
-
-- total products
-- low-stock products
-- out-of-stock products
-- current quantity and price per item
-
----
+The same product should not be saved twice inside a single order. The UI already tries to prevent that, but the database also protects the invariant.
 
 ## Project structure
 
 ```text
 app/
-├── Actions/Orders/CreateOrderAction.php      # Order creation use case
-├── Console/Commands/ImportProducts.php       # Product spreadsheet import
+├── Actions/Orders/CreateOrderAction.php
+├── Console/Commands/ImportProducts.php
 ├── Http/Controllers/
-│   ├── OrderController.php                   # List, create, and show orders
-│   └── ProductController.php                 # Search/list products and stock
-├── Http/Requests/StoreOrderRequest.php       # Order payload validation
-├── Imports/ProductsImport.php                # Spreadsheet-to-Product mapping
-└── Models/                                   # Domain entities
+│   ├── OrderController.php
+│   └── ProductController.php
+├── Http/Requests/StoreOrderRequest.php
+├── Imports/ProductsImport.php
+└── Models/
 
 resources/js/
 ├── components/
-│   ├── common/LoadingOverlay.vue             # Global loading overlay
-│   └── orders/OrderItemsSection.vue          # Order items UI
+│   ├── common/LoadingOverlay.vue
+│   └── orders/OrderItemsSection.vue
 ├── composables/
-│   ├── useLoadingOverlay.js                  # Shared loading state
-│   └── useOrderForm.js                       # Front-end form rules
+│   ├── orderFormUtils.js
+│   ├── useLoadingOverlay.js
+│   └── useOrderForm.js
 ├── pages/
-│   ├── OrdersList.vue                        # Orders list
-│   ├── OrderPage.vue                         # New order / view order
-│   └── NotFound.vue                          # SPA 404 page
+│   ├── OrderPage.vue
+│   ├── OrdersList.vue
+│   ├── StockPage.vue
+│   └── NotFound.vue
+├── router/index.js
 ├── services/
-│   ├── apiClient.js                          # Axios instance
-│   ├── orderService.js                       # Orders API consumption
-│   └── productService.js                     # Products API consumption
-└── helpers/index.js                          # Date and currency formatting
+│   ├── apiClient.js
+│   ├── orderService.js
+│   └── productService.js
+└── helpers/index.js
 
-database/
-├── migrations/                               # Database structure
-└── seeders/OrderSeeder.php                   # Demo order seeder
-
-docker/
-└── app/
-    ├── start-app.sh                          # Regular container startup
-    └── setup-demo.sh                         # Explicit demo bootstrap
-
-docker-compose.yml                            # Full local environment
-Dockerfile                                    # Multi-stage build
+.github/workflows/ci.yml
+Dockerfile
+docker-compose.yml
 ```
 
----
-
-## API endpoints
+## API overview
 
 ### `GET /api/products`
-Lists products or searches by term.
+
+Autocomplete-oriented product search.
 
 Example:
 
 ```http
-GET /api/products?q=ar
+GET /api/products?q=ri
 ```
 
 Response:
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "RICE...",
-    "price": "10.50",
-    "qty_stock": 20
-  }
-]
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Rice",
+      "price": "10.50",
+      "qty_stock": 20
+    }
+  ]
+}
 ```
 
+### `GET /api/products/stock`
+
+Returns the full stock snapshot used by the inventory page.
+
 ### `GET /api/orders`
-Returns the order list in descending order.
+
+Returns the saved orders list in descending order.
 
 ### `GET /api/orders/{id}`
-Returns the order header and its items.
+
+Returns one order with its items and product names.
 
 ### `POST /api/orders`
+
 Creates a new order.
 
 Payload:
@@ -323,97 +223,53 @@ Success response:
 
 ```json
 {
-  "order_id": 1,
-  "total": "28.00",
-  "message": "Order created successfully."
+  "data": {
+    "id": 1,
+    "total": "28.00"
+  },
+  "message": "Pedido criado com sucesso."
 }
 ```
 
----
+## Validation strategy
 
-## Validation and rule protection
+### Front end
 
-### On the front end
+The interface improves the flow by:
 
-- prevents submission without a name
-- prevents submission without a date
-- requires at least one product
-- shows subtotal and total in real time
-- warns when a product is out of stock
-- prevents exceeding stock through `InputNumber`
-- tries to merge duplicate items before submission
+- requiring customer name and delivery date
+- requiring at least one selected product
+- showing subtotal and total in real time
+- preventing quantity below 1
+- warning when the selected product is out of stock
+- merging duplicated selections before submission
 
-### On the back end
+### Back end
 
-- validates payload structure with `StoreOrderRequest`
-- validates product existence
-- validates minimum quantity
-- validates available stock using data locked inside the transaction
-- consolidates duplicate items regardless of what came from the client
+The API remains the source of truth by:
 
-In other words: **the interface helps; the server guarantees**.
+- validating request shape with `StoreOrderRequest`
+- validating product existence
+- validating quantity bounds
+- validating stock inside the transaction using locked rows
+- aggregating duplicated items even if the client sends them twice
 
----
+## Tests
 
-## Seeds and demo data
+The repository includes automated tests for both the back end and the front end.
 
-In addition to catalog import, the project includes `OrderSeeder` with **6 sample orders**.
+Covered scenarios include:
 
-An important detail: the seeder does not insert records "by force". It calls `CreateOrderAction` itself, keeping the demo data aligned with the same real business rules.
-
-This is a small but important detail that helps avoid misleading seed data.
-
----
-
-## Automated tests
-
-The repository includes tests on both the back end and the front end.
-
-### Back-end — PHPUnit
-
-Current coverage for the main scenarios:
-
-- order creation with stock deduction
-- rejection due to insufficient stock
-- order list sorting
-- order details
-- 404 for a missing order
+- successful order creation with stock deduction
+- rejection when stock is insufficient
 - duplicate product consolidation
-- valid product import
-- invalid spreadsheet row discard
-- product list filtering and limiting
+- order listing and order details
+- product import behavior
+- product search filtering and limits
+- order form total calculation and payload assembly
+- front-end service behavior
 
-### Front-end — Vitest
-
-Current coverage for:
-
-- total calculation in the composable
-- item addition and removal
-- payload assembly
-- product suggestion loading
-- formatting helpers
-- order and product services
-
-In total, the project currently includes **28 automated tests** covering the most important domain and interface flows.
-
----
-
-## Bootstrap modes
-
-One refinement made after the original technical challenge was separating **application startup** from **demo data bootstrap**.
-
-That distinction matters because migrations, catalog import, and sample seeding are useful for portfolio presentation, but they should not be tied to every container boot or to the main production command.
-
-This repository now keeps those concerns separate:
-
-- **app mode** starts the API normally
-- **demo mode** runs migrations, imports the spreadsheet, and seeds sample orders only when explicitly invoked
-
-This keeps local onboarding simple while making the runtime behavior look closer to a real application lifecycle.
-
----
-
-## Running with Docker
+## Running locally with Docker
 
 ### Requirements
 
@@ -433,33 +289,17 @@ Available services:
 - Vue/Vite: `http://localhost:5173`
 - PostgreSQL: `localhost:5432`
 
-### Load demo data explicitly
+### Load demo data
 
 ```bash
 docker compose exec app sh docker/app/setup-demo.sh
 ```
 
-This second step is intentional. The application container starts normally, and demo bootstrap is executed only when needed.
+Demo bootstrap is intentionally separate from normal startup, so the app container does not rerun migrations and seeds on every boot.
 
-### What the environment does automatically
+## Running locally without Docker
 
-When the `app` service starts, the project:
-
-- waits for PostgreSQL to become available
-- installs PHP dependencies
-- creates `.env` if it does not exist
-- generates `APP_KEY` if needed
-- starts the Laravel server
-
-It does **not** run migrations, import products, or seed demo orders on every boot.
-
-The `frontend` service installs Node dependencies and starts Vite with hot reload.
-
----
-
-## Running without Docker
-
-### App-only setup
+### Minimal application setup
 
 ```bash
 composer install
@@ -468,7 +308,7 @@ php artisan key:generate
 php artisan serve
 ```
 
-### Full demo setup
+### Full demo bootstrap
 
 ```bash
 composer install
@@ -477,67 +317,39 @@ php artisan key:generate
 php artisan migrate
 php artisan products:import
 php artisan db:seed --class=OrderSeeder
-npm install
+npm ci
 npm run build
 ```
 
-Or, if you prefer a single command for the portfolio/demo bootstrap:
+Or use the Composer helper:
 
 ```bash
 composer setup:demo
 ```
-
-### Database
-
-This project is configured for **PostgreSQL**.
-
-The search endpoint uses `ILIKE`, which is PostgreSQL-specific. If the goal is to port it to MySQL, this point would need to be adjusted.
-
----
 
 ## Useful commands
 
 ```bash
-# Minimal application setup
 composer setup:app
-
-# Full demo bootstrap
 composer setup:demo
-
-# Run back-end tests
 php artisan test
-
-# Run front-end tests
 npm run test:front
-
-# Import catalog manually
 php artisan products:import
 ```
 
----
+## Possible next iterations
 
-## What I would do in a next iteration
+Natural next steps for a production version would be:
 
-If this case evolved into a real product, the most natural next steps would be:
-
-- authentication and access profiles
 - order cancellation with stock restoration
 - stock movement history
-- pagination and filtering in the catalog beyond autocomplete
-- API Resources for standardized responses
-- OpenAPI / Swagger documentation
-- observability and business logs
-- CI pipeline to run PHPUnit and Vitest automatically
+- pagination and richer catalog filters
+- API Resources for response standardization
+- authentication and access control
+- OpenAPI documentation
 
----
+## Final note
 
-## Final notes
+The goal of this project is simple: show practical engineering judgment.
 
-This project was designed to demonstrate a pragmatic approach:
-
-- solve the business problem
-- protect the data
-- keep the code readable
-- organize the application in a way that matches the scope
-
-There is no abstraction for vanity. The existing separations were chosen to make the system more predictable, testable, and easier to evolve.
+It is intentionally small in scope, but the important parts are treated seriously: validation, transaction safety, persistence modeling, test coverage, and readable structure.

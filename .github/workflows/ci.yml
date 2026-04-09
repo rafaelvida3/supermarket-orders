@@ -67,9 +67,6 @@ jobs:
           extensions: bcmath, mbstring, pdo_pgsql, zip
           coverage: none
 
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
       - name: Cache Composer dependencies
         uses: actions/cache@v5
         with:
@@ -79,6 +76,9 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Prepare Laravel environment
         run: |
@@ -103,12 +103,7 @@ jobs:
           cache: npm
 
       - name: Install frontend dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+        run: npm ci
 
       - name: Run frontend tests
         run: npm run test:front

@@ -1,4 +1,3 @@
-/* ===== Imports ===== */
 import Lara from "@primeuix/themes/lara";
 import "primeicons/primeicons.css";
 import PrimeVue from "primevue/config";
@@ -9,10 +8,8 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 
-/* ===== Create Vue app instance ===== */
 const app = createApp(App);
 
-/* ===== Register plugins and global components ===== */
 app.use(router);
 app.use(PrimeVue, {
   theme: {
@@ -26,7 +23,6 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.component("Toast", Toast);
 
-/* ===== Customize default Toast behavior ===== */
 const toast = app.config.globalProperties.$toast;
 const originalAdd = toast.add;
 
@@ -34,5 +30,4 @@ toast.add = (message) => {
   originalAdd({ life: 2500, ...message });
 };
 
-/* ===== Mount app to DOM ===== */
 app.mount("#app");
